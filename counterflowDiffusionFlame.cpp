@@ -163,10 +163,10 @@ void counterflowDiffusionFlame()
 		for (int j=0;j<solution.nColumns();j++)
 		{
 			outfile << solution(i,j);
-			if (j!=solution.nColumns()) outfile << ",";
+			if (j!=solution.nColumns()-1) outfile << ",";
 		}
+		outfile << std::endl;
 	}
-	outfile << std::endl;
 }
 
 
