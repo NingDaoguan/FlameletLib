@@ -1,10 +1,12 @@
 #include "cantera/thermo.h"
 #include "cantera/oneD/Sim1D.h"
 #include "cantera/oneD/Inlet1D.h"
-#include "cantera/oneD/StFlow.h"
 #include "cantera/transport/TransportBase.h"
 #include "cantera/IdealGasMix.h"
 #include "cantera/transport.h"
+
+#include "StFlowNew.h"
+#include "StFlowNew.cpp"
 
 #include <iostream>
 #include <ostream>
