@@ -18,16 +18,15 @@ void counterflowDiffusionFlame()
 	std::cout << " 1D counterflow diffusion flame for CH4 " << std::endl;
 
 	doublereal p0 = OneAtm;
-	doublereal TinLeft = 300.0;
-	doublereal TinRight = 1200.0;
+	doublereal TinLeft = 300.0; // fuel
+	doublereal TinRight = 300.0; // oxidizer
 	doublereal mdotLeft = 0.24; // kg/m^2/s
 	doublereal mdotRight = 0.72; // kg/m^2/s
 
 	std::string compLeft = "CH4:0.999, AR:0.001";
 	std::string compRight = "O2:0.21, N2:0.79";
 
-	IdealGasMix gas("gri30.cti","gri30");
-	gas.setState_TPX(TinLeft,p0,compLeft);
+	IdealGasMix gas("gri30.cti");
 	size_t nsp = gas.nSpecies();
 	
 	size_t points = 21;
@@ -36,6 +35,7 @@ void counterflowDiffusionFlame()
 
 	// create the flow
 	StFlow flow(&gas,nsp,points);
+	flow.setAxisymmetricFlow();
 
 
 	// setup grid
@@ -86,6 +86,7 @@ void counterflowDiffusionFlame()
 
 
 	// init
+	gas.setState_TPX(0.5*(TinLeft+TinRight),p0,"CH4:1.0, O2:2.0, N2:7.52");
 	try {
 		gas.equilibrate("HP");
 	} catch (CanteraError& err) {
@@ -109,12 +110,63 @@ void counterflowDiffusionFlame()
 	flame.setInitialGuess("T",locs,values);
 
 	for (int ik=0; ik<nsp;ik++)
-    {
+	{
        values[0]=left.massFraction(ik);
        values[1]=yIn[ik];
        values[2]=right.massFraction(ik);
        flame.setInitialGuess(gas.speciesName(ik), locs, values);
 	}
+
+
+	// solve
+	size_t domFlow = 1;
+	flame.setMaxGridPoints(domFlow,200);
+	flow.setPressure(p0);
+	flow.solveEnergyEqn();
+	flame.setRefineCriteria(domFlow,200.0,0.1,0.2,0.02);
+	flame.solve(1,true);
+
+
+	// post-process
+	int np = flow.nPoints();
+	Array2D solution(np,nsp+6,0.0);
+	vector_fp grid;
+	grid.resize(np);
+	for (int iz=0;iz<np;iz++)
+	{
+		grid[iz] = flow.grid(iz);
+	}
+
+	for (int n=0; n<np; n++)
+	{
+		solution(n,0) = grid[n];
+		
+		for (int i=1;i<5;i++)
+		{
+			solution(n,i) = flame.value(domFlow,i-1,n);
+		}
+ 
+		for (int i=5; i<nsp+5;i++)
+	   	{
+	  		if (flame.value(domFlow, i-1,n) > 0.0) {solution(n,i) = flame.value(domFlow, i-1,n);}
+	    	else if (flame.value(domFlow, i-1,n) < 0.0)
+	    	{
+	        	solution(n,i) = 0.0;
+	        	flame.setValue(domFlow, i-1,n,0.0);
+	    	}
+		}		
+	}
+
+	std::ofstream outfile("output.txt");
+	for (int i=0;i<solution.nRows();i++)
+	{
+		for (int j=0;j<solution.nColumns();j++)
+		{
+			outfile << solution(i,j);
+			if (j!=solution.nColumns()) outfile << ",";
+		}
+	}
+	outfile << std::endl;
 }
 
 
