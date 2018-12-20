@@ -5,8 +5,7 @@
 #include "cantera/IdealGasMix.h"
 #include "cantera/transport.h"
 
-#include "StFlowNew.h"
-#include "StFlowNew.cpp"
+#include "cantera/oneD/StFlow.h"
 
 #include <iostream>
 #include <ostream>
