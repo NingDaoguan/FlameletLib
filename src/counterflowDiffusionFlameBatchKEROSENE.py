@@ -11,7 +11,7 @@ if not os.path.exists(data_directory):
 
 reaction_mechanism = 'KEROSENE_CRECK231.cti'
 gas = ct.Solution(reaction_mechanism)
-width = 0.02 # 20mm wide
+width = 0.2 # 200mm wide
 f = ct.CounterflowDiffusionFlame(gas, width=width)
 
 # Define the operating pressure and boundary conditions
@@ -24,12 +24,12 @@ f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
 f.oxidizer_inlet.T = 800.0  # K
 
 # Set refinement parameters, if used
-f.set_refine_criteria(ratio=4.0, slope=0.4, curve=0.3, prune=0.04)
+f.set_refine_criteria(ratio=4.0, slope=0.3, curve=0.3, prune=0.04)
 
 # Define a limit for the maximum temperature below which the flame is
 # considered as extinguished and the computation is aborted
 # This increases the speed of refinement is enabled
-temperature_limit_extinction = 900  # K
+temperature_limit_extinction = 800  # K
 def interrupt_extinction(t):
     if np.max(f.T) < temperature_limit_extinction:
         raise Exception('Flame extinguished')

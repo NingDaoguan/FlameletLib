@@ -1,21 +1,11 @@
 # Thu Mar  7 10:15:11 CST 2019
 import cantera as ct
 import numpy as np
-import matplotlib.pyplot as plt
-fonts1 = 20
-fonts2 = 25
-linew = 3
-figs = (13,10)
-Tmax = 2700
-x_ticks = np.arange(0.0, 0.025, 0.005)
-cs = ['r','c','b','m']
-lss = ['-','--','-.',':']
-mks = ['o','s','^','p']
 
+filename = 'output.csv'
 fuel = ['NC12H26','IC16H34','DECALIN','C7H8']
 Y_f = np.array([0.322, 0.446, 0.185, 0.047])
 gas = ct.Solution("KEROSENE_CRECK231.cti")
-
 
 names = gas.species_names
 nsp = len(names)
@@ -51,7 +41,6 @@ ZH_f  = np.dot(Y_f, muH_f)
 ZO_f  = np.dot(Y_f, muO_f)
 
 # Read Y
-filename = 'output.csv'
 data = np.loadtxt(filename,delimiter=',',skiprows=1)
 data = np.transpose(data)
 Y = data[6:-1]
@@ -67,22 +56,6 @@ ZO_o = ZO[-1]
 
 Z = ( 2*(ZC-ZC_o)/mwC + 0.5*(ZH-ZH_o)/mwH - (ZO-ZO_o)/mwO ) \
     / ( 2*(ZC_f-ZC_o)/mwC + 0.5*(ZH_f-ZH_o)/mwH - (ZO_f-ZO_o)/mwO )
-
-x = data[0]
-YAR = data[6]
-YARO = YAR[-1]
-Z1 = (YAR - YARO) / (0.0-YARO)
-T = data[3]
-
-plt.figure(figsize=figs)
-plt.plot(Z1,T,label = 'Z based on AR',c='k',lw=linew)
-plt.plot(Z,T,label = 'Bilger',c='r',lw=linew)
-plt.tick_params(labelsize=fonts1)
-plt.xlabel(r'Z (-)',fontsize=fonts1)
-plt.ylabel(r'T (K)',fontsize=fonts1)
-plt.legend(loc=0,fontsize=fonts1)
-plt.savefig('Z-T.png', dpi=500)
-plt.show()
 
 '''
 filename = ['output.csv']
