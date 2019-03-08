@@ -3,7 +3,7 @@ import cantera as ct
 import numpy as np
 import matplotlib.pyplot as plt
 
-numLoop = 14 # Total number of loops
+numLoop = 25 # Total number of loops
 p = 101325.0 # Ambient pressure
 Dz0 = 0.2e-4 # Diffusion coefficient of Z @ 273K
 filename2 = 'flameletTable.csv'
@@ -17,7 +17,7 @@ molW = gas.molecular_weights
 muC = np.zeros(nsp)
 muH = np.zeros(nsp)
 muO = np.zeros(nsp)
-mwC = 12.017
+mwC = 12.011
 mwH = 1.0079
 mwO = 15.999
 for i, specie in enumerate(names):

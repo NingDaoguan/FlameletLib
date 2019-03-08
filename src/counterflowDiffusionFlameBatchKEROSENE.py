@@ -16,10 +16,10 @@ f = ct.CounterflowDiffusionFlame(gas, width=width)
 
 # Define the operating pressure and boundary conditions
 f.P = 1.e5  # 1 bar
-f.fuel_inlet.mdot = 0.5  # kg/m^2/s
+f.fuel_inlet.mdot = 0.9 # kg/m^2/s
 f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
 f.fuel_inlet.T = 480.0  # K
-f.oxidizer_inlet.mdot = 0.5  # kg/m^2/s
+f.oxidizer_inlet.mdot = 0.4  # kg/m^2/s
 f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
 f.oxidizer_inlet.T = 800.0  # K
 
