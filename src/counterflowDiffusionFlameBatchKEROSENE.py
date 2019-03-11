@@ -29,7 +29,7 @@ f.set_refine_criteria(ratio=4.0, slope=0.3, curve=0.3, prune=0.04)
 # Define a limit for the maximum temperature below which the flame is
 # considered as extinguished and the computation is aborted
 # This increases the speed of refinement is enabled
-temperature_limit_extinction = 300  # K
+temperature_limit_extinction = 480  # K
 def interrupt_extinction(t):
     if np.max(f.T) < temperature_limit_extinction:
         raise Exception('Flame extinguished')
