@@ -2,8 +2,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-#filename = ['./diffusion_flame_batch_data/initial_solution.csv']
-filename = ['./diffusion_flame_batch_data/strain_loop_21.csv']
+filename = ['./diffusion_flame_batch_data/initial_solution.csv']
+#filename = ['./diffusion_flame_batch_data/strain_loop_12.csv']
 
 fonts1 = 20
 fonts2 = 25

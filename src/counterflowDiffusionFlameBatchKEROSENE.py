@@ -7,21 +7,97 @@ data_directory = './diffusion_flame_batch_data/'
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
+print('1:\tJet-A-300K\n2:\tJet-A-300KLe1\n3:\tJet-A-800K\n4:\tJet-A-800KLe1\n5:\tnc12h26-300K\n6:\tnc12h26-300KLe1')
+x = input()
+x = int(x)
 # PART 1: INITIALIZATION
-
-reaction_mechanism = 'KEROSENE_CRECK231.cti'
-gas = ct.Solution(reaction_mechanism)
-width = 0.2 # 200mm wide
-f = ct.CounterflowDiffusionFlame(gas, width=width)
-
-# Define the operating pressure and boundary conditions
-f.P = 1.e5  # 1 bar
-f.fuel_inlet.mdot = 0.6 # kg/m^2/s
-f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
-f.fuel_inlet.T = 480.0  # K
-f.oxidizer_inlet.mdot = 0.35 # kg/m^2/s
-f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-f.oxidizer_inlet.T = 300.0  # K
+if x==1:
+    reaction_mechanism = 'KEROSENE_CRECK231.cti'
+    gas = ct.Solution(reaction_mechanism)
+    width = 0.4 # 200mm wide
+    f = ct.CounterflowDiffusionFlame(gas, width=width)
+    # Define the operating pressure and boundary conditions
+    f.P = 1.e5  # 1 bar
+    f.fuel_inlet.mdot = 0.6 # kg/m^2/s
+    f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
+    f.fuel_inlet.T = 480.0  # K
+    f.oxidizer_inlet.mdot = 0.35 # kg/m^2/s
+    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
+    f.oxidizer_inlet.T = 300.0  # K
+    temperature_limit_extinction = 480  # K
+elif x==2:
+    reaction_mechanism = 'KEROSENE_CRECK231.cti'
+    gas = ct.Solution(reaction_mechanism)
+    gas.transport_model = 'UnityLewis'
+    width = 0.4 # 200mm wide
+    f = ct.CounterflowDiffusionFlame(gas, width=width)
+    # Define the operating pressure and boundary conditions
+    f.P = 1.e5  # 1 bar
+    f.fuel_inlet.mdot = 0.6 # kg/m^2/s
+    f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
+    f.fuel_inlet.T = 480.0  # K
+    f.oxidizer_inlet.mdot = 0.35 # kg/m^2/s
+    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
+    f.oxidizer_inlet.T = 300.0  # K
+    temperature_limit_extinction = 480  # K
+elif x==3:
+    reaction_mechanism = 'KEROSENE_CRECK231.cti'
+    gas = ct.Solution(reaction_mechanism)
+    width = 0.4 # 200mm wide
+    f = ct.CounterflowDiffusionFlame(gas, width=width)
+    # Define the operating pressure and boundary conditions
+    f.P = 1.e5  # 1 bar
+    f.fuel_inlet.mdot = 0.9 # kg/m^2/s
+    f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
+    f.fuel_inlet.T = 480.0  # K
+    f.oxidizer_inlet.mdot = 0.4 # kg/m^2/s
+    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
+    f.oxidizer_inlet.T = 800.0  # K
+    temperature_limit_extinction = 800  # K
+elif x==4:
+    reaction_mechanism = 'KEROSENE_CRECK231.cti'
+    gas = ct.Solution(reaction_mechanism)
+    gas.transport_model = 'UnityLewis'
+    width = 0.4 # 200mm wide
+    f = ct.CounterflowDiffusionFlame(gas, width=width)
+    # Define the operating pressure and boundary conditions
+    f.P = 1.e5  # 1 bar
+    f.fuel_inlet.mdot = 0.9 # kg/m^2/s
+    f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
+    f.fuel_inlet.T = 480.0  # K
+    f.oxidizer_inlet.mdot = 0.4 # kg/m^2/s
+    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
+    f.oxidizer_inlet.T = 800.0  # K
+    temperature_limit_extinction = 800  # K
+elif x==5:
+    reaction_mechanism = 'nDodecane_CRECK.cti'
+    gas = ct.Solution(reaction_mechanism)
+    width = 0.4 # 200mm wide
+    f = ct.CounterflowDiffusionFlame(gas, width=width)
+    # Define the operating pressure and boundary conditions
+    f.P = 1.e5  # 1 bar
+    f.fuel_inlet.mdot = 0.6 # kg/m^2/s
+    f.fuel_inlet.X = 'NC12H26:1.0'
+    f.fuel_inlet.T = 480.0  # K
+    f.oxidizer_inlet.mdot = 0.35 # kg/m^2/s
+    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
+    f.oxidizer_inlet.T = 300.0  # K
+    temperature_limit_extinction = 480  # K
+elif x==6:
+    reaction_mechanism = 'nDodecane_CRECK.cti'
+    gas = ct.Solution(reaction_mechanism)
+    gas.transport_model = 'UnityLewis'
+    width = 0.4 # 200mm wide
+    f = ct.CounterflowDiffusionFlame(gas, width=width)
+    # Define the operating pressure and boundary conditions
+    f.P = 1.e5  # 1 bar
+    f.fuel_inlet.mdot = 0.6 # kg/m^2/s
+    f.fuel_inlet.X = 'NC12H26:1.0'
+    f.fuel_inlet.T = 480.0  # K
+    f.oxidizer_inlet.mdot = 0.35 # kg/m^2/s
+    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
+    f.oxidizer_inlet.T = 300.0  # K
+    temperature_limit_extinction = 480  # K
 
 # Set refinement parameters, if used
 f.set_refine_criteria(ratio=4.0, slope=0.3, curve=0.3, prune=0.04)
@@ -29,7 +105,6 @@ f.set_refine_criteria(ratio=4.0, slope=0.3, curve=0.3, prune=0.04)
 # Define a limit for the maximum temperature below which the flame is
 # considered as extinguished and the computation is aborted
 # This increases the speed of refinement is enabled
-temperature_limit_extinction = 480  # K
 def interrupt_extinction(t):
     if np.max(f.T) < temperature_limit_extinction:
         raise Exception('Flame extinguished')
