@@ -79,7 +79,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
         if (name=="rightType")
             { rightType = size_t(value); continue; }
     }
-    doublereal minGrid = width/200.0;
+    doublereal minGrid = width/150.0;
     #include "FuelInfo.h"
     std::cout << "#Input Parameters" << std::endl;
     std::cout << "#\tDomain      :\t"
@@ -323,8 +323,8 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
             solution(n,i) = flame.value(domFlow,i-1,n);
         }
         for (int i=5; i<nsp+6;i++)
-           {
-              if (flame.value(domFlow, i-1,n) > 0.0) {solution(n,i) = flame.value(domFlow, i-1,n);}
+        {
+            if (flame.value(domFlow, i-1,n) > 0.0) {solution(n,i) = flame.value(domFlow, i-1,n);}
             else if (flame.value(domFlow, i-1,n) < 0.0)
             {
                 solution(n,i) = 0.0;
