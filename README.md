@@ -1,2 +1,2 @@
-# CounterflowDiffusionFlame
-Solve fluid flow, heat and mass transfer with reaction for 1D counterflow diffusion flame based on Cantera.
+# Flames
+Solve 1D fluid flow, heat and mass transfer with reaction based on Cantera.
