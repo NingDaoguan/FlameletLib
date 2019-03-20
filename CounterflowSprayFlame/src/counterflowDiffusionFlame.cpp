@@ -5,14 +5,14 @@
 #include <string>
 
 #include "cantera/thermo.h"
-#include "Inlet1DNew.h"
+#include "Inlet1DSpr.h"
 #include "cantera/transport/TransportBase.h"
 #include "cantera/IdealGasMix.h"
 #include "cantera/transport.h"
 #include "Lagrangian.cpp"
-#include "Sim1DNew.cpp"
-#include "StFlowNew.cpp"
-#include "OneDimNew.cpp"
+#include "Sim1DSpr.cpp"
+#include "StFlowSpr.cpp"
+#include "OneDimSpr.cpp"
 
 using namespace Cantera;
 
