@@ -12,7 +12,7 @@ ax2 = plt.subplot(122)
 nLoop = range(0,numLoop+1,1)
 for n in nLoop:
     data2 = []
-    filename = 'a{:}.csv'.format(n)
+    filename = 'a{:}.txt'.format(n)
     if y == '1':
         filename2 = './tablesChi/sprayTable{:}.csv'.format(n)
     elif y == '2':
@@ -32,10 +32,10 @@ for n in nLoop:
             line2 = 'Z,Yc,T'
         else:
             print('Input Error!')
-        for i in range(len(names) - 6):
+        for i in range(len(names) - 7):
             line2 += ',' + names[i+6]
         with open(filename2, 'w+') as f:
-            f.write(line2)
+            f.write(line2 + '\n')
 
     data1 = np.loadtxt(filename, delimiter=',', skiprows=1)
     data1 = np.transpose(data1)
@@ -70,7 +70,7 @@ for n in nLoop:
     else:
         print('Input Error!')
     data2.append(list(T))
-    for i in range(len(data1) - 6):
+    for i in range(len(data1) - 7):
         data2.append(list(data1[i+6]))
     data2 = np.array(data2)
     data2 = np.transpose(data2)
