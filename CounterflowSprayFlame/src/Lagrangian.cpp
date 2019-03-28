@@ -14,7 +14,7 @@ Lagrangian::Lagrangian
     diameterInjection_(diameterInjection),
     mdotInjection_(mdotInjection),
     LagrangianOutfile_(LagrangianOutfile),
-    dt_(5e-5),
+    dt_(2e-5),
     rhoDrop_(7.686e2),
     parcelNumber_(0),
     delta_(1.0e-12),
@@ -188,7 +188,7 @@ void Lagrangian::evaluateTransferRateField()
         std::cout << "RMS residual:\t" << residual << std::endl;
     }
     
-    if (loopCnt_ == 0 || residual > 0.02)
+    if (loopCnt_ == 0 || residual > 0.01)
     {
         oldHeatTransferField_ = heatTransferRateField_;
         oldMassTransferField_ = massTransferRateField_;
@@ -454,7 +454,7 @@ void Lagrangian::solve()
             for (int i=0;i<fuelNum_;i++)
                 { trackComponent_[i].push_back(component_[i][0]); }
         }
-        if (parcelNumber_>10000) ok = true;
+        if (parcelNumber_>20000) ok = true;
     }
 
     this->evaluateTransferRateField();

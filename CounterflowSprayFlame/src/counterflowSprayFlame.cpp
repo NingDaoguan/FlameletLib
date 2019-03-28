@@ -299,7 +299,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     flow.setPressure(p0);
     flow.solveEnergyEqn();
     //flame.setRefineCriteria(domFlow,10.0,0.7,0.7,-0.1);
-    flame.setRefineCriteria(domFlow,10.0,10,10,-0.1);
+    flame.setRefineCriteria(domFlow,10.0,1,1,-0.1);
     flame.setTimeStep(1.0e-5,tstepsSize,&tsteps[0]);
     flame.solve(1,true);
 
