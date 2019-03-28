@@ -19,7 +19,7 @@ using namespace Cantera;
 void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal len)
 {
     size_t tstepsSize = 6; // take tsteps[i] time steps
-    const int tsteps[tstepsSize] = {10,20,10,20,20,20};
+    const int tsteps[tstepsSize] = {10,20,10,20,20,10};
     doublereal p0 = OneAtm;
     std::string kinFileName;
     std::string kinPhase;
@@ -46,7 +46,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     doublereal Teq;
     doublereal mdotLeft = mdotF; // kg/m^2/s
     doublereal mdotRight = mdotO; // kg/m^2/s
-    size_t points = 41;
+    size_t points = 101;
     doublereal width = len;
     doublereal a0 = 50;
     size_t ignition = 0; // 1 with ignition
@@ -60,7 +60,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
             { points = size_t(value); continue; }
         if (name == "phi")
             { phi = value; continue; }
-        if (name ==  "diameterInjection")
+        if (name == "diameterInjection")
             { diameterInjection = value; continue; }
         if (name == "uInjection")
             { uInjection = value; continue; }
@@ -298,7 +298,8 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     flame.setGridMin(domFlow, minGrid);
     flow.setPressure(p0);
     flow.solveEnergyEqn();
-    flame.setRefineCriteria(domFlow,10.0,0.7,0.7,-0.1);
+    //flame.setRefineCriteria(domFlow,10.0,0.7,0.7,-0.1);
+    flame.setRefineCriteria(domFlow,10.0,10,10,-0.1);
     flame.setTimeStep(1.0e-5,tstepsSize,&tsteps[0]);
     flame.solve(1,true);
 
