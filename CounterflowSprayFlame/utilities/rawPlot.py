@@ -2,7 +2,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-filename = ['mf-0.3mo-0.3L-0.02_raw.txt','mf-0.5mo-0.5L-0.02_raw.txt']
+filename = ['mf-0.3mo-0.3L-0.02_raw.txt']
 xin = 'n'
 figs = (13,10)
 fonts1 = 23
@@ -140,14 +140,16 @@ for ic,filename1 in enumerate(filename):
     for i,ip in enumerate(p1):
         if i%3==0:
             p.append(ip)
-            d.append(d2[i]*d2[i])
+            #d.append(d2[i]*d2[i])
+            d.append(d2[i])
     p.append(p1[-1])
     d.append(0)
     plt.scatter(p,d,label=r'Droplet',marker='o',s=50,c='r')
     
     ax1.set_xlabel(r'x (m)', fontsize=fonts1)
     ax1.set_ylabel(r'Temperature (K)',fontsize=fonts1)
-    ax2.set_ylabel(r'$\left(\frac{d}{d_0}\right)^2$ (-)',fontsize=fonts1)
+    #ax2.set_ylabel(r'$\left(\frac{d}{d_0}\right)^2$ (-)',fontsize=fonts1)
+    ax2.set_ylabel(r'$\frac{d}{d_0}$ (-)',fontsize=fonts1)
     ax1.tick_params(labelsize=fonts1)
     ax2.tick_params(labelsize=fonts1)
     ax2.legend(loc='upper right',fontsize=fonts1)

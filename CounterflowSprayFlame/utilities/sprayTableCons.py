@@ -14,9 +14,9 @@ for n in nLoop:
     data2 = []
     filename = 'a{:}.txt'.format(n)
     if y == '1':
-        filename2 = './tablesChi/sprayTable{:}.csv'.format(n)
+        filename2 = './tablesChi/sprayTable_{:}.csv'.format(n)
     elif y == '2':
-        filename2 = './tablesYc/sprayTable{:}.csv'.format(n)
+        filename2 = './tablesYc/sprayTable_{:}.csv'.format(n)
     else:
         print('Input Error!')
     # Read names

@@ -19,7 +19,7 @@ using namespace Cantera;
 void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal len)
 {
     size_t tstepsSize = 6; // take tsteps[i] time steps
-    const int tsteps[tstepsSize] = {10,20,10,20,20,10};
+    const int tsteps[tstepsSize] = {10,20,10,20,20,20};
     doublereal p0 = OneAtm;
     std::string kinFileName;
     std::string kinPhase;
