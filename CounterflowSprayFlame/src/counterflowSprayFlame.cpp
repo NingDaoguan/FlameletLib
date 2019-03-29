@@ -32,6 +32,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     std::string compInit;
     // input from file
     std::ifstream infile("input.txt");
+    if (!infile) std::cerr << "input.txt NOT FOUND!" << std::endl;
     std::string name; // name column
     doublereal value; // value column
     size_t fuel = 0; // 0 for Kerosene test

@@ -7,7 +7,8 @@ import subprocess
 from multiprocessing import Pool
 import numpy as np
 
-NumOfProc = os.cpu_count()
+# NumOfProc = os.cpu_count()
+NumOfProc = 1
 OverwriteExisting = True
 
 if len(sys.argv) != 2:
@@ -19,7 +20,7 @@ else:
         print("Not found!")
         exit(-2)
 
-output_dir = os.path.join('..', 'data')
+output_dir = os.path.join('.', 'data')
 if not os.path.exists(output_dir):
     os.mkdir(output_dir)
 
@@ -43,7 +44,7 @@ def counterflow(x):
         print(info)
 
     if (not dup_exist) or (dup_exist and OverwriteExisting):
-        prog = "../bin/counterflowDiffusionFlame"
+        prog = "counterflowSprayFlame"
         arg1 = "{}".format(mf)
         arg2 = "{}".format(mo)
         arg3 = "{}".format(domain_length)
