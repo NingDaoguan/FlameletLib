@@ -34,11 +34,11 @@ cbar.set_label(r'T (K)', fontsize=fonts2)
 for t in cbar.ax.get_yticklabels():
     t.set_fontsize(fonts2)
 plt.tick_params(labelsize=fonts2)
-plt.xlabel(r'Z (-)',fontsize=fonts2)
+plt.xlabel(r'$Z (-)$',fontsize=fonts2)
 if y == '0':
-    plt.ylabel(r'$Y_c$ (-)',fontsize=fonts2)
+    plt.ylabel(r'$Y_c (-)$',fontsize=fonts2)
 elif y == '1':
-    plt.ylabel(r'$\chi$ (-)',fontsize=fonts2)
+    plt.ylabel(r'$\chi (1/s)$',fontsize=fonts2)
 else:
     print("Input Error")
 

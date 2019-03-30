@@ -438,7 +438,7 @@ void Lagrangian::solve()
                 {
                     this->heatAndMassTransfer(iParcel);
                     mass = rhoDrop_ * (4.0/3.0) * Pi * oldDiameter * oldDiameter * oldDiameter / 8.0;
-                    // first order Euler
+                    // Second-order Runge-Kutta method
                     particleVelocity_[iParcel] += this->force(iParcel)*dt_/mass; // newVelocity
                     doublereal newVelocity = particleVelocity_[iParcel]; 
                     positions_[iParcel] = 0.5*(oldVelocity+newVelocity)*dt_ + oldPosition;
