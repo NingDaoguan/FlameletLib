@@ -47,7 +47,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     doublereal Teq;
     doublereal mdotLeft = mdotF; // kg/m^2/s
     doublereal mdotRight = mdotO; // kg/m^2/s
-    size_t points = 101;
+    size_t points = 51;
     doublereal width = len;
     doublereal a0 = 50;
     size_t ignition = 0; // 1 with ignition
@@ -80,7 +80,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
         if (name=="rightType")
             { rightType = size_t(value); continue; }
     }
-    doublereal minGrid = width/150.0;
+    doublereal minGrid = width/500;
     #include "FuelInfo.h"
     std::cout << "#Input Parameters" << std::endl;
     std::cout << "#\tDomain      :\t"
@@ -299,8 +299,8 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     flame.setGridMin(domFlow, minGrid);
     flow.setPressure(p0);
     flow.solveEnergyEqn();
-    //flame.setRefineCriteria(domFlow,10.0,0.7,0.7,-0.1);
-    flame.setRefineCriteria(domFlow,10.0,1,1,-0.1);
+    flame.setRefineCriteria(domFlow,10.0,0.8,0.8,-0.1);
+    // flame.setRefineCriteria(domFlow,10.0,1,1,-0.1);
     flame.setTimeStep(1.0e-5,tstepsSize,&tsteps[0]);
     flame.solve(1,true);
 
