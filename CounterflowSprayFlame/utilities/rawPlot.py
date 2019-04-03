@@ -5,7 +5,7 @@ import matplotlib
 
 Dz0 = 0.2e-4 # Diffusion coefficient of Z @ 273K
 p = 101325.0 # Ambient pressure
-filename = ['mf-0.3mo-0.3L-0.02_raw.txt']
+filename = ['mf-0.3mo-0.3L-0.05_raw.txt']
 xin = 'n'
 figs = (13,10)
 fonts1 = 23

@@ -10,7 +10,7 @@ data_directory = './patch_data/'
 print('1:\tJet-A-300K\n2:\tJet-A-300KLe1\n3:\tJet-A-800K\n4:\tJet-A-800KLe1\n5:\tnc12h26-300K\n6:\tnc12h26-300KLe1')
 x = input()
 x = int(x)
-width = 0.015
+width = 0.02
 # PART 1: INITIALIZATION
 if x==1:
     reaction_mechanism = 'KEROSENE_CRECK231.cti'
@@ -18,10 +18,10 @@ if x==1:
     f = ct.CounterflowDiffusionFlame(gas, width=width)
     # Define the operating pressure and boundary conditions
     f.P = 1.e5  # 1 bar
-    f.fuel_inlet.mdot = 5.5 # kg/m^2/s
+    f.fuel_inlet.mdot = 6.1 # kg/m^2/s
     f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
     f.fuel_inlet.T = 480.0  # K
-    f.oxidizer_inlet.mdot = 3 # kg/m^2/s
+    f.oxidizer_inlet.mdot = 3.6 # kg/m^2/s
     f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
     f.oxidizer_inlet.T = 300.0  # K
     temperature_limit_extinction = 480  # K
@@ -94,16 +94,16 @@ elif x==6:
     f.oxidizer_inlet.T = 300.0  # K
     temperature_limit_extinction = 480  # K
 
-# Set refinement parameters, if used
+
 f.set_refine_criteria(ratio=4.0, slope=0.3, curve=0.3, prune=0.04)
 
 
 # Initialize and solve
-print('Restore an initial solution')
-file_name = 'patchInit.xml'
-f.restore(filename=data_directory + file_name, name='solution', loglevel=0)
+# print('Restore an initial solution')
+# file_name = 'patchInit.xml'
+# f.restore(filename=data_directory + file_name, name='solution', loglevel=0)
 
-f.solve(loglevel=0, auto=True)
+f.solve(loglevel=1, auto=True)
 
 f.save(data_directory + 'patch1' + '.xml', name='solution',
        description='Cantera version ' + ct.__version__ +
