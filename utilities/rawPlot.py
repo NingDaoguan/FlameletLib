@@ -4,8 +4,15 @@ import matplotlib.pyplot as plt
 import matplotlib
 
 Dz0 = 0.2e-4 # Diffusion coefficient of Z @ 273K
-p = 101325.0 # Ambient pressure
-filename = ['initial_solution.csv']
+p0 = 101325.0 # Ambient pressure
+print("Please enter file names:")
+filename = []
+while True:
+    name_input = input('> ')
+    if name_input == '':
+        break
+    else:
+        filename.append(name_input)
 xin = 'n'
 figs = (13,10)
 fonts1 = 23
@@ -36,7 +43,7 @@ for i in range(len(name)):
         continue
     elif name[i] == 'CO':
         COIndex = i
-        majorIndex.append(i)
+        # majorIndex.append(i)
         continue
     elif name[i] == 'CO2':
         CO2Index = i
@@ -44,7 +51,7 @@ for i in range(len(name)):
         continue
     elif name[i] == 'H2':
         H2Index = i
-        majorIndex.append(i)
+        # majorIndex.append(i)
         continue
     elif name[i] == 'H2O':
         H2OIndex = i
@@ -72,7 +79,7 @@ for i in range(len(name)):
         C7H8Index = i
         continue
 
-# Plot T, Y and Z
+# Plot T, Y, Z and droplets
 for j,file in enumerate(filename):
     plt.figure(figsize=figs)
     ax1 = plt.subplot(111)
@@ -85,30 +92,52 @@ for j,file in enumerate(filename):
     T = data[3]
     if xin is 'n':
         YIN = data[ARIndex]
-        YIN_O = YIN[-1]
+        YIN_O = max(YIN[-1], YIN[0])
     else:
         YIN = data[N2Index]
-        YIN_O = YIN[-1]
+        YIN_O = max(YIN[-1], YIN[0])
     YIN_F = 0
     Z = (YIN - YIN_O)/(YIN_F - YIN_O)
-    Zave = np.sum(Z) / len(Z)
-    print('Z-'+file+f':\t{Zave}')
-    print(f'Strain rate:\t{a}')
+    print(f'Mean strain rate:\t{a}')
     ax1.plot(x,T,marker='^',label='T',c='k',ls='-.',lw=linew,ms=6)
     for k in majorIndex:
         ax2.plot(x,data[k],label=name[k],lw=linew)
+
     # ax2.plot(x,10000*data[HCOIndex],label=name[HCOIndex] + r'$\times 10^4$',lw=linew)
     # ax2.plot(x,10*data[OHIndex],label=name[OHIndex] + r'$\times 10$',lw=linew)
     ax2.plot(x,Z,label='Z',ls=':',c='r',lw=linew)
+
+    filename2 = 'LAG' + file
+    try:
+        data2 = np.loadtxt(filename2,delimiter=',',comments='#',skiprows=0)
+        data2 = np.transpose(data2)
+        #time
+        t1 = data2[0]
+        p1 = data2[1]
+        d1 = data2[3]
+        d2 = d1/d1[0]
+        p = []
+        d = []
+        for i,ip in enumerate(p1):
+            if i%10==0:
+                p.append(ip)
+                #d.append(d2[i]*d2[i])
+                d.append(d2[i])
+        p.append(p1[-1])
+        d.append(0)
+        ax2.scatter(p,d,label=r'Droplet',marker='o',s=50,c='r')
+    except IOError:
+        pass
+
     ax1.set_xlabel(r'x (m)', fontsize=fonts1)
     ax1.set_ylabel(r'Temperature (K)',fontsize=fonts1)
-    ax2.set_ylabel('Mass fractions / mixture fraction (-)',fontsize=fonts1)
+    ax2.set_ylabel(r'$Y$ / $Z$ / $d^*$ (-)',fontsize=fonts1)
     ax1.tick_params(labelsize=fonts1)
     ax2.tick_params(labelsize=fonts1)
     ax2.legend(loc=0,fontsize=fonts1)
     ax1.legend(loc=0,fontsize=fonts1)
     # plt.xticks(x_ticks,color='k')
-    # plt.savefig(f'{j}'+'-x-T.png',dpi=500)
+    # plt.savefig(file+'-x-T.png',dpi=500,bbox_inches='tight')
 
 
 # Plot T-Z
@@ -120,18 +149,17 @@ for i,file in enumerate(filename):
     T = data[3]
     if xin is 'n':
         YIN = data[ARIndex]
-        YIN_O = YIN[-1]
+        YIN_O = max(YIN[-1], YIN[0])
     else:
         YIN = data[N2Index]
-        YIN_O = YIN[-1]
+        YIN_O = max(YIN[-1], YIN[0])
     YIN_F = 0
     Z = (YIN - YIN_O)/(YIN_F - YIN_O)
     plt.plot(Z,T,c='k',lw=linew)
 plt.tick_params(labelsize=fonts1)
 plt.xlabel(r'Z (-)',fontsize=fonts1)
 plt.ylabel(r'T (K)',fontsize=fonts1)
-# plt.legend(loc=0,fontsize=fonts1)
-# plt.savefig('Z-T.png', dpi=500)
+# plt.savefig('Z-T.png', dpi=500,bbox_inches='tight')
 
 
 # Plot Z-Chi:T
@@ -143,10 +171,10 @@ for i,file in enumerate(filename):
     T = data[3]
     if xin is 'n':
         YIN = data[ARIndex]
-        YIN_O = YIN[-1]
+        YIN_O = max(YIN[-1], YIN[0])
     else:
         YIN = data[N2Index]
-        YIN_O = YIN[-1]
+        YIN_O = max(YIN[-1], YIN[0])
     YIN_F = 0
     Z = (YIN - YIN_O)/(YIN_F - YIN_O)
     chi = np.zeros(len(x)) # Dissipation rate \chi
@@ -155,7 +183,7 @@ for i,file in enumerate(filename):
         chi[i+1] = (Z[i+2] - Z[i]) / (x[i+2] - x[i])
     chi[len(x) - 1] = (Z[-1] - Z[-2]) / (x[-1] - x[-2])
     chi = 2 * chi**2 # 2(grad(Z))^2
-    Dz = Dz0 * (T/273.0)**1.5 * 101325.0/p # Diffusion coefficient Dz
+    Dz = Dz0 * (T/273.0)**1.5 * 101325.0/p0 # Diffusion coefficient Dz
     chi = Dz*chi # chi = 2D(grad(Z))^2
     norm = matplotlib.colors.Normalize(vmin=300, vmax=2500)
     sc = plt.scatter(Z,chi,c=T,cmap=plt.cm.rainbow,s=3,norm=norm)
@@ -165,10 +193,9 @@ cbar.set_label(r'T (K)', fontsize=fonts2)
 for t in cbar.ax.get_yticklabels():
     t.set_fontsize(fonts2)
 plt.tick_params(labelsize=fonts1)
-plt.xlabel(r'$Z (-)$',fontsize=fonts1)
-plt.ylabel(r'$\chi (1/s)$',fontsize=fonts1)
-plt.legend(loc=0,fontsize=fonts1)
-# plt.savefig('Z-T.png', dpi=500)
+plt.xlabel(r'$Z \ (-)$',fontsize=fonts1)
+plt.ylabel(r'$\chi \ (1/s)$',fontsize=fonts1)
+# plt.savefig('Z-T.png', dpi=500,bbox_inches='tight')
 
 
 # Plot Flame Index (FI)
@@ -196,9 +223,11 @@ for file in filename:
             FI[i] = 0
         else:
             FI[i] = (gradF[i] / np.sqrt(gradF[i]*gradF[i])) * (gradO[i] / np.sqrt(gradO[i] * gradO[i]))
-    plt.scatter(x,FI,c='k')
+    plt.scatter(x,FI,label=file,c='k')
 plt.tick_params(labelsize=fonts1)
 plt.xlabel(r'x (m)',fontsize=fonts1)
 plt.ylabel(r'FI (-)',fontsize=fonts1)
+plt.ylim(-1,1)
 # plt.legend(loc=0,fontsize=fonts1)
+# plt.savefig('FI.png', dpi=500,bbox_inches='tight')
 plt.show()

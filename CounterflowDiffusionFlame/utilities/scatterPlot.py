@@ -33,6 +33,8 @@ cbar = plt.colorbar(sc,ticks=v)
 cbar.set_label(r'T (K)', fontsize=fonts2)
 for t in cbar.ax.get_yticklabels():
     t.set_fontsize(fonts2)
+plt.xlim(0,1)
+plt.ylim(0,1200)
 plt.tick_params(labelsize=fonts2)
 plt.xlabel(r'Z (-)',fontsize=fonts2)
 if y == '0':
@@ -42,5 +44,5 @@ elif y == '1':
 else:
     print("Input Error")
 
-plt.savefig('SLF_Z'+y+'.png',dpi=500)
+plt.savefig('SLF_Z'+y+'.png',dpi=500,bbox_inches='tight')
 plt.show()
