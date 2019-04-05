@@ -5,11 +5,8 @@
 #include "cantera/transport/TransportBase.h"
 #include "cantera/IdealGasMix.h"
 #include "cantera/transport.h"
-#include "Sim1DFree.h"
 #include "Sim1DFree.cpp"
-#include "StFlowFree.h"
 #include "StFlowFree.cpp"
-#include "OneDimFree.h"
 #include "OneDimFree.cpp"
 
 

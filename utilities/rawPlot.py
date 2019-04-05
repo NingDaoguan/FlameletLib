@@ -186,7 +186,7 @@ for i,file in enumerate(filename):
     Dz = Dz0 * (T/273.0)**1.5 * 101325.0/p0 # Diffusion coefficient Dz
     chi = Dz*chi # chi = 2D(grad(Z))^2
     norm = matplotlib.colors.Normalize(vmin=300, vmax=2500)
-    sc = plt.scatter(Z,chi,c=T,cmap=plt.cm.rainbow,s=3,norm=norm)
+    sc = plt.scatter(Z,chi,c=T,cmap=plt.cm.rainbow,s=20,norm=norm)
 v = [300,500,1000,1500,2000,2500]
 cbar = plt.colorbar(sc,ticks=v)
 cbar.set_label(r'T (K)', fontsize=fonts2)
