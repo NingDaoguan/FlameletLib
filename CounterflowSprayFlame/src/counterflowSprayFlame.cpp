@@ -80,7 +80,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
         if (name=="rightType")
             { rightType = size_t(value); continue; }
     }
-    doublereal minGrid = width/500;
+    doublereal minGrid = 100e-6;
     #include "FuelInfo.h"
     std::cout << "#Input Parameters" << std::endl;
     std::cout << "#\tDomain      :\t"

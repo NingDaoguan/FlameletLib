@@ -5,15 +5,6 @@ import matplotlib
 
 Dz0 = 0.2e-4 # Diffusion coefficient of Z @ 273K
 p0 = 101325.0 # Ambient pressure
-print("Please enter file names:")
-filename = []
-while True:
-    name_input = input('> ')
-    if name_input == '':
-        break
-    else:
-        filename.append(name_input)
-xin = 'n'
 figs = (13,10)
 fonts1 = 23
 fonts2 = 25
@@ -22,6 +13,15 @@ plt.rcParams['font.family'] = 'serif'
 from matplotlib import rc
 plt.rcParams['mathtext.fontset'] = 'stix'
 # x_ticks = np.arange(0.0, 0.025, 0.005)
+xin = 'n'
+print("Enter file names:")
+filename = []
+while True:
+    name_input = input('> ')
+    if name_input == '':
+        break
+    else:
+        filename.append(name_input)
 
 # Read names
 file = filename[0]
@@ -33,7 +33,13 @@ with open(file) as f:
         name.append(line[i])
 majorIndex = []
 for i in range(len(name)):
-    if name[i] == 'O2':
+    if name[i] == 'z' or name[i] == 'z (m)':
+        xIndex = i
+    elif name[i] == 'u' or name[i] == 'u (m/s)':
+        uIndex = i
+    elif name[i] == 'T' or name[i] == 'T (K)':
+        TIndex = i
+    elif name[i] == 'O2':
         O2Index = i
         majorIndex.append(i)
         continue
@@ -43,7 +49,7 @@ for i in range(len(name)):
         continue
     elif name[i] == 'CO':
         COIndex = i
-        # majorIndex.append(i)
+        majorIndex.append(i)
         continue
     elif name[i] == 'CO2':
         CO2Index = i
@@ -51,7 +57,7 @@ for i in range(len(name)):
         continue
     elif name[i] == 'H2':
         H2Index = i
-        # majorIndex.append(i)
+        majorIndex.append(i)
         continue
     elif name[i] == 'H2O':
         H2OIndex = i
@@ -78,6 +84,9 @@ for i in range(len(name)):
     elif name[i] == 'C7H8':
         C7H8Index = i
         continue
+    elif name[i] == 'C2H5OH':
+        C2H5OHIndex = i
+        continue
 
 # Plot T, Y, Z and droplets
 for j,file in enumerate(filename):
@@ -86,10 +95,10 @@ for j,file in enumerate(filename):
     ax2 = ax1.twinx()
     data = np.loadtxt(file, delimiter=',', skiprows = 1)
     data = np.transpose(data)
-    x = data[0]
-    u = data[1]
+    x = data[xIndex]
+    u = data[uIndex]
     a = (u[0] - u[-1]) / (x[-1] - x[0])
-    T = data[3]
+    T = data[TIndex]
     if xin is 'n':
         YIN = data[ARIndex]
         YIN_O = max(YIN[-1], YIN[0])
@@ -102,7 +111,6 @@ for j,file in enumerate(filename):
     ax1.plot(x,T,marker='^',label='T',c='k',ls='-.',lw=linew,ms=6)
     for k in majorIndex:
         ax2.plot(x,data[k],label=name[k],lw=linew)
-
     # ax2.plot(x,10000*data[HCOIndex],label=name[HCOIndex] + r'$\times 10^4$',lw=linew)
     # ax2.plot(x,10*data[OHIndex],label=name[OHIndex] + r'$\times 10$',lw=linew)
     ax2.plot(x,Z,label='Z',ls=':',c='r',lw=linew)
@@ -126,12 +134,13 @@ for j,file in enumerate(filename):
         p.append(p1[-1])
         d.append(0)
         ax2.scatter(p,d,label=r'Droplet',marker='o',s=50,c='r')
+        ax2.set_ylabel(r'$Y$ / $Z$ / $d^*$ (-)',fontsize=fonts1)
     except IOError:
+        ax2.set_ylabel(r'$Y$ / $Z$ (-)',fontsize=fonts1)
         pass
 
     ax1.set_xlabel(r'x (m)', fontsize=fonts1)
     ax1.set_ylabel(r'Temperature (K)',fontsize=fonts1)
-    ax2.set_ylabel(r'$Y$ / $Z$ / $d^*$ (-)',fontsize=fonts1)
     ax1.tick_params(labelsize=fonts1)
     ax2.tick_params(labelsize=fonts1)
     ax2.legend(loc=0,fontsize=fonts1)
@@ -145,8 +154,8 @@ plt.figure(figsize=figs)
 for i,file in enumerate(filename):
     data = np.loadtxt(file, delimiter=',', skiprows = 1)
     data = np.transpose(data)
-    x = data[0]
-    T = data[3]
+    x = data[xIndex]
+    T = data[TIndex]
     if xin is 'n':
         YIN = data[ARIndex]
         YIN_O = max(YIN[-1], YIN[0])
@@ -155,11 +164,10 @@ for i,file in enumerate(filename):
         YIN_O = max(YIN[-1], YIN[0])
     YIN_F = 0
     Z = (YIN - YIN_O)/(YIN_F - YIN_O)
-    plt.plot(Z,T,c='k',lw=linew)
+    plt.plot(Z,T,lw=linew)
 plt.tick_params(labelsize=fonts1)
 plt.xlabel(r'Z (-)',fontsize=fonts1)
 plt.ylabel(r'T (K)',fontsize=fonts1)
-# plt.savefig('Z-T.png', dpi=500,bbox_inches='tight')
 
 
 # Plot Z-Chi:T
@@ -167,8 +175,8 @@ plt.figure(figsize=figs)
 for i,file in enumerate(filename):
     data = np.loadtxt(file, delimiter=',', skiprows = 1)
     data = np.transpose(data)
-    x = data[0]
-    T = data[3]
+    x = data[xIndex]
+    T = data[TIndex]
     if xin is 'n':
         YIN = data[ARIndex]
         YIN_O = max(YIN[-1], YIN[0])
@@ -197,15 +205,16 @@ plt.xlabel(r'$Z \ (-)$',fontsize=fonts1)
 plt.ylabel(r'$\chi \ (1/s)$',fontsize=fonts1)
 # plt.savefig('Z-T.png', dpi=500,bbox_inches='tight')
 
-
+'''
 # Plot Flame Index (FI)
 plt.figure(figsize=figs)
 for file in filename:
     data = np.loadtxt(file,delimiter=',',skiprows = 1)
     data = np.transpose(data)
-    x = data[0]
+    x = data[xIndex]
     YOx = data[O2Index]
-    YFu = data[NC12H26Index] + data[IC16H34Index] + data[DECALINIndex] + data[C7H8Index]
+    # YFu = data[NC12H26Index] + data[IC16H34Index] + data[DECALINIndex] + data[C7H8Index]
+    YFu = data[C2H5OHIndex]
     gradF = np.zeros(len(x))
     gradO = np.zeros(len(x))
     gradO[0] = (YOx[1] - YOx[0]) / (x[1] - x[0]) # Gradient computation
@@ -230,4 +239,19 @@ plt.ylabel(r'FI (-)',fontsize=fonts1)
 plt.ylim(-1,1)
 # plt.legend(loc=0,fontsize=fonts1)
 # plt.savefig('FI.png', dpi=500,bbox_inches='tight')
+'''
+
+
+# u-x
+plt.figure(figsize=figs)
+for file in filename:
+    data = np.loadtxt(file,delimiter=',',skiprows = 1)
+    data = np.transpose(data)
+    x = data[xIndex]
+    u = data[uIndex]
+    plt.scatter(x,u,label=file,c='k')
+plt.tick_params(labelsize=fonts1)
+plt.xlabel(r'x (m)',fontsize=fonts1)
+plt.ylabel(r'u (m/s)',fontsize=fonts1)
+
 plt.show()

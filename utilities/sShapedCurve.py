@@ -10,7 +10,7 @@ from matplotlib import rc
 plt.rcParams['mathtext.fontset'] = 'stix'
 # x_ticks = np.arange(0.0, 0.025, 0.005)
 
-Zst = 0.0633883
+Zst = 0.1005
 numLoop = int(input('Enter loop number:\n')) # Total number of loops
 nLoop = range(0,numLoop+1,1)
 chiSt = []
@@ -37,14 +37,16 @@ for n in nLoop:
             continue
 
     chiSt.append(chi[pU] * weightU + chi[pL] * weightL)
+    #Tmax.append(T[pU] * weightU + T[pL] * weightL)
     Tmax.append(np.max(T))
 
 # Plot T-Z
 plt.figure(figsize=figs)
 plt.scatter(chiSt,Tmax,c='k',marker='o')
-# plt.scatter(np.log10(chiSt),Tmax,c='k',marker='o')
+#plt.scatter(np.log10(chiSt),Tmax,c='k',marker='o')
 plt.tick_params(labelsize=fonts1)
 plt.xlabel(r'$\chi_{st} \ (1/s)$',fontsize=fonts1)
+#plt.xlabel(r'$log(\chi_{st}) \ (1/s)$',fontsize=fonts1)
 plt.ylabel(r'$T_{max} \ (K)$',fontsize=fonts1)
 
 plt.show()

@@ -1,4 +1,0 @@
-fuel    2
-temperature 480
-phi 1.4
-

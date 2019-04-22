@@ -45,7 +45,7 @@ for n in nLoop:
     H2Index = 9
     CO2Index = 13
     COIndex = 12
-    Yc = data1[H2OIndex] + data1[H2Index] + data1[CO2Index] + data1[COIndex]
+    Yc = data1[H2OIndex] / 18 + data1[H2Index] / 2 + data1[CO2Index] / 44 + data1[COIndex] / 28
     YAR = data1[6]
     YARO = YAR[0]
     Z = (YAR - YARO) / (0.0-YARO)
@@ -75,6 +75,6 @@ for n in nLoop:
     data2 = np.array(data2)
     data2 = np.transpose(data2)
     with open(filename2,'a') as f:
-        np.savetxt(f, data2, delimiter=',')
+        np.savetxt(f, data2, delimiter=',',fmt='%f')
 plt.show()
 
