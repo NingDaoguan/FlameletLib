@@ -34,6 +34,8 @@ public:
             T_B[0] = 350;
             lat_k = -1018.1;
             lat_b = 1179230.0;
+            cp_k = 4.037;
+            cp_b = 1124.9;
         }
         else if(fuelNum_ == 4)
         {
@@ -47,6 +49,8 @@ public:
             T_B[3] = 384.0;
             lat_k = -616.17;
             lat_b = 538499.6;
+            cp_k = 3.84;
+            cp_b = 1056.88;
         }
         else
         {
@@ -54,6 +58,8 @@ public:
             T_B[0] = 490.0;
             lat_k = -616.17;
             lat_b = 538499.6;
+            cp_k = 3.84;
+            cp_b = 1056.88;
         }
     }
 
@@ -218,6 +224,11 @@ private:
         return lat_k * T + lat_b;
     }
 
+    doublereal getCpL(const doublereal T)
+    {
+        return cp_k * T + cp_b;
+    }
+
     doublereal linearInterpolate(const vector_fp& field, const doublereal z) const;
 
     doublereal linearInterpolate(const vector_fp& field, const vector_fp grid, const doublereal z) const;
@@ -252,6 +263,8 @@ private:
     vector_fp T_B;
     doublereal lat_k;
     doublereal lat_b;
+    doublereal cp_k;
+    doublereal cp_b;
 
     // parcel
     size_t parcelNumber_;

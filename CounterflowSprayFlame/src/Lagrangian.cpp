@@ -230,14 +230,13 @@ void Lagrangian::heatAndMassTransfer(const int iParcel)
     }
 
     // ********************************************************************* //
-    // thermophysical properties of Jet-A surrogate hard-coded
     // Non-equilibrium Langmuir-Knudsen evaporation model hard-coded
     doublereal relativeRe = rhoGas * std::abs(uGas - uDrop) * oldDiameter / muGas;
     relativeRe = (relativeRe > delta_ ? relativeRe : delta_);
     const doublereal mass = rhoDrop_ * (4.0/3.0)*Pi*oldDiameter*oldDiameter*oldDiameter/8.0;
     const doublereal W_C = 28.97e-3; // molecular weight of air 
     doublereal latentHeat = ( getLatentHeat(oldTemperature) > 1.0 ? getLatentHeat(oldTemperature) : 1.0 );
-    const doublereal cpDrop = 3.84 * oldTemperature + 1056.88; // c_p droplet
+    const doublereal cpDrop = getCpL(oldTemperature); // c_p droplet
     const doublereal Pr = 0.7;
     const doublereal Sc = 0.7;
     const doublereal D = muGas/(rhoGas*Sc); // diffusion coefficient
@@ -256,7 +255,7 @@ void Lagrangian::heatAndMassTransfer(const int iParcel)
     vector_fp Xsneq(fuelNum_,0); // non-equilibrium mole fractions
     vector_fp Yseq(fuelNum_,0); // equilibrium mass fractions
     vector_fp Ysneq(fuelNum_,0); // non-equilibrium mass fractions
-    vector_fp BH(4,0.0); // Spalding transfer numbers
+    vector_fp BH(fuelNum_,0.0); // Spalding transfer numbers
     doublereal L_K; // Knudsen layer thickness
     for (size_t i=0;i<fuelNum_;i++)
     {
