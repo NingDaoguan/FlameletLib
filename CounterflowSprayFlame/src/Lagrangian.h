@@ -30,12 +30,14 @@ public:
         trackComponent_.resize(fuelNum_);
         if (fuelName_[0] == "C2H5OH")
         {
-            W_V[0] = 12*2+6+16;
-            T_B[0] = 350;
-            lat_k = -1018.1;
-            lat_b = 1179230.0;
-            cp_k = 4.037;
-            cp_b = 1124.9;
+            W_V[0] = 46.0e-3;
+            T_B[0] = 350.0;
+            lat_a3 = -4.64447747e-03;
+            lat_a2 =  3.69964540e+00;
+            lat_a1 = -1.28942888e+03;
+            lat_a0 =  1.05313435e+06;
+            cp_a1 = 4.037;
+            cp_a0 = 1124.9;
         }
         else if(fuelNum_ == 4)
         {
@@ -47,19 +49,23 @@ public:
             T_B[1] = 513.0;
             T_B[2] = 460.0;
             T_B[3] = 384.0;
-            lat_k = -616.17;
-            lat_b = 538499.6;
-            cp_k = 3.84;
-            cp_b = 1056.88;
+            lat_a3 = -6.72216465e-03;
+            lat_a2 =  8.01138467e+00;
+            lat_a1 = -3.62211999e+03;
+            lat_a0 =  9.05036560e+05;
+            cp_a1 = 3.84;
+            cp_a0 = 1056.88;
         }
         else
         {
             W_V[0] = 170.0e-3;
             T_B[0] = 490.0;
-            lat_k = -616.17;
-            lat_b = 538499.6;
-            cp_k = 3.84;
-            cp_b = 1056.88;
+            lat_a3 = -6.72216465e-03;
+            lat_a2 =  8.01138467e+00;
+            lat_a1 = -3.62211999e+03;
+            lat_a0 =  9.05036560e+05;
+            cp_a1 = 3.84;
+            cp_a0 = 1056.88;
         }
     }
 
@@ -221,12 +227,12 @@ private:
 
     doublereal getLatentHeat(const doublereal T)
     {
-        return lat_k * T + lat_b;
+        return lat_a0 + lat_a1*T + lat_a2*T*T + lat_a3*T*T*T;
     }
 
     doublereal getCpL(const doublereal T)
     {
-        return cp_k * T + cp_b;
+        return cp_a0 + cp_a1*T;
     }
 
     doublereal linearInterpolate(const vector_fp& field, const doublereal z) const;
@@ -261,10 +267,12 @@ private:
     size_t fuelNum_;
     vector_fp W_V;
     vector_fp T_B;
-    doublereal lat_k;
-    doublereal lat_b;
-    doublereal cp_k;
-    doublereal cp_b;
+    doublereal lat_a0;
+    doublereal lat_a1;
+    doublereal lat_a2;
+    doublereal lat_a3;
+    doublereal cp_a0;
+    doublereal cp_a1;
 
     // parcel
     size_t parcelNumber_;
