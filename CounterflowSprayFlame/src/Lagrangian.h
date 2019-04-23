@@ -21,11 +21,40 @@ public:
     {
         fuelName_ = fuelName;
         fuelNum_ = fuelName.size();
+        W_V.resize(fuelNum_);
+        T_B.resize(fuelNum_);
         massTransferRateField_.resize(fuelNum_);
         oldMassTransferField_.resize(fuelNum_);
         component_.resize(fuelNum_);
         particleJg_.resize(fuelNum_);
         trackComponent_.resize(fuelNum_);
+        if (fuelName_[0] == "C2H5OH")
+        {
+            W_V[0] = 12*2+6+16;
+            T_B[0] = 350;
+            lat_k = -1018.1;
+            lat_b = 1179230.0;
+        }
+        else if(fuelNum_ == 4)
+        {
+            W_V[0] = 170.0e-3;
+            T_B[0] = 490.0;
+            W_V[1] = 226.0e-3;
+            W_V[2] = 138.0e-3;
+            W_V[3] = 92.00e-3;
+            T_B[1] = 513.0;
+            T_B[2] = 460.0;
+            T_B[3] = 384.0;
+            lat_k = -616.17;
+            lat_b = 538499.6;
+        }
+        else
+        {
+            W_V[0] = 170.0e-3;
+            T_B[0] = 490.0;
+            lat_k = -616.17;
+            lat_b = 538499.6;
+        }
     }
 
     void setInjectionVelocity(const doublereal uInjection)
@@ -75,6 +104,16 @@ public:
     void setMuField(const vector_fp& muField)
     {
         muField_ = muField;
+    }
+
+    void setConField(const vector_fp& conField)
+    {
+        conField_ = conField;
+    }
+
+    void setCpField(const vector_fp& cpField)
+    {
+        cpField_ = cpField;
     }
 
     void setPressure(const doublereal p)
@@ -174,6 +213,11 @@ private:
 
     void heatAndMassTransfer(const int iParcel);
 
+    doublereal getLatentHeat(const doublereal T)
+    {
+        return lat_k * T + lat_b;
+    }
+
     doublereal linearInterpolate(const vector_fp& field, const doublereal z) const;
 
     doublereal linearInterpolate(const vector_fp& field, const vector_fp grid, const doublereal z) const;
@@ -199,9 +243,15 @@ private:
     size_t loopCnt_;
     size_t ignition_;
     bool ok_;
+
+
+    // fuel
     std::vector<std::string> fuelName_;
     size_t fuelNum_;
-
+    vector_fp W_V;
+    vector_fp T_B;
+    doublereal lat_k;
+    doublereal lat_b;
 
     // parcel
     size_t parcelNumber_;
@@ -221,6 +271,8 @@ private:
     vector_fp TField_;
     std::vector<std::vector<double> > YField_;
     vector_fp muField_;
+    vector_fp conField_;
+    vector_fp cpField_;
 
     vector_fp liquidGasMassRatio_; // liquid phase
     vector_fp heatTransferRateField_; // J/m^s/s

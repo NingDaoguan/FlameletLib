@@ -19,7 +19,7 @@ using namespace Cantera;
 void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal len)
 {
     size_t tstepsSize = 6; // take tsteps[i] time steps
-    const int tsteps[tstepsSize] = {10,20,10,20,20,20};
+    const int tsteps[tstepsSize] = {10,20,10,20,10,20};
     doublereal p0 = OneAtm;
     std::string kinFileName;
     std::string kinPhase;
@@ -27,9 +27,9 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     std::vector<double> fuelX;
     doublereal C_atoms;
     doublereal H_atoms;
+    doublereal O_atoms;
     std::string compLeft;
     std::string compRight;
-    std::string compInit;
     // input from file
     std::ifstream infile("input.txt");
     if (!infile) std::cerr << "input.txt NOT FOUND!" << std::endl;
@@ -44,6 +44,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     doublereal LagrangianRelaxationFactor = 1.0;
     doublereal TinLeft = 300; // fuel side
     doublereal TinRight = 300; // oxidizer side
+    doublereal Tvapor = 480;
     doublereal Teq;
     doublereal mdotLeft = mdotF; // kg/m^2/s
     doublereal mdotRight = mdotO; // kg/m^2/s
@@ -80,7 +81,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
         if (name=="rightType")
             { rightType = size_t(value); continue; }
     }
-    doublereal minGrid = 100e-6;
+    doublereal minGrid = diameterInjection;
     #include "FuelInfo.h"
     std::cout << "#Input Parameters" << std::endl;
     std::cout << "#\tDomain      :\t"
@@ -109,7 +110,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     vector_fp x(nsp, 0.0);
     vector_fp y(nsp, 0.0);
     doublereal mixtureFraction = 0.0;
-    doublereal ax = C_atoms + H_atoms / 4.0;
+    doublereal ax = C_atoms + H_atoms / 4.0 - O_atoms / 2.0;
     doublereal fa_stoic = 1.0 / (4.76 * ax);
     for (size_t i=0;i<fuelName.size();i++)
     {
@@ -126,7 +127,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
         x[gas.speciesIndex("O2")] = 0.21 / phi / fa_stoic;
         x[gas.speciesIndex("N2")] = 0.79 / phi / fa_stoic;
     }
-    gas.setState_TPX(480, p0, x.data());
+    gas.setState_TPX(Tvapor, p0, x.data());
     gas.getMassFractions(&y[0]);
     for (size_t i=0;i<fuelName.size();i++)
     {
@@ -196,7 +197,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
         x[gas.speciesIndex("O2")] = 0.21 / (phi) / fa_stoic;
         x[gas.speciesIndex("N2")] = 0.79 / (phi) / fa_stoic;
     }
-    gas.setState_TPX(480, p0, x.data());
+    gas.setState_TPX(Tvapor, p0, x.data());
     vector_fp xR(nsp, 0.0);
     gas.equilibrate("HP");
     gas.getMoleFractions(&xR[0]);
@@ -224,7 +225,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     }
     else
     {
-        TinRight = 480.0;
+        TinRight = Tvapor;
         compRight = "";
         vector_fp xF(nsp,0.0);
         for (size_t i=0;i<fuelName.size();i++)

@@ -1012,7 +1012,6 @@ bool StFlow::updateSSLagrangian(const vector_fp& solutionRef) const
     vector_fp velocityField;
     vector_fp TField;
     std::vector<std::vector<double> > YField(fuelName_.size());
-    vector_fp muField;
     
     zField = grid();
     for (int j=0;j<zField.size();j++)
@@ -1051,7 +1050,7 @@ bool StFlow::updateSSLagrangian(const vector_fp& solutionRef) const
 
         if (i==solutionLength-1) std::cout << std::endl;
     }
-    muField = m_visc;
+
 
     // pass by reference
     std::cout << "\nzField size: #\t" << zField.size() << std::endl;
@@ -1061,13 +1060,14 @@ bool StFlow::updateSSLagrangian(const vector_fp& solutionRef) const
     vector_fp& velocityFieldRef = velocityField;
     vector_fp& TFieldRef = TField;
     std::vector<std::vector<double> >& YFieldRef = YField;
-    vector_fp& muFieldRef = muField;
     parcel_.setZField(zFieldRef);
     parcel_.setRhoField(rhoFieldRef);
     parcel_.setVelocityField(velocityFieldRef);
     parcel_.setTemperatureField(TFieldRef);
     parcel_.setMassFractionField(YFieldRef);
-    parcel_.setMuField(muFieldRef);
+    parcel_.setMuField(m_visc);
+    parcel_.setConField(m_tcon);
+    parcel_.setCpField(m_cp);
 
     parcel_.solve();
     parcel_.write();

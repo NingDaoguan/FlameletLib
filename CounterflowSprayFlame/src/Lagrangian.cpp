@@ -15,7 +15,7 @@ Lagrangian::Lagrangian
     mdotInjection_(mdotInjection),
     LagrangianOutfile_(LagrangianOutfile),
     dt_(2e-5),
-    rhoDrop_(7.686e2),
+    rhoDrop_(7.386e2),
     parcelNumber_(0),
     delta_(1.0e-12),
     loopCnt_(0),
@@ -215,9 +215,13 @@ void Lagrangian::heatAndMassTransfer(const int iParcel)
     // gas phase information
     doublereal rhoGas = this->linearInterpolate(rhoField_,zDrop);
     if (rhoGas<delta_) rhoGas=0.8;
-    doublereal uGas = this->linearInterpolate(uField_,zDrop);
-    doublereal muGas = this->linearInterpolate(muField_,zDrop);
+    doublereal uGas = this->linearInterpolate(uField_, zDrop);
+    doublereal muGas = this->linearInterpolate(muField_, zDrop);
     if (muGas<delta_) muGas=1e-5;
+    doublereal k = this->linearInterpolate(conField_, zDrop); // W/m*K
+    k = (k > delta_ ? k : 0.0266);
+    doublereal cpGas = this->linearInterpolate(cpField_, zDrop);
+    cpGas = (cpGas > delta_ ? cpGas : 1006.0);
     doublereal TGas = std::max( this->linearInterpolate(TField_,zDrop), 273.15 );
     vector_fp YGas(fuelNum_,0);
     for (size_t i=0;i<fuelNum_;i++)
@@ -231,27 +235,8 @@ void Lagrangian::heatAndMassTransfer(const int iParcel)
     doublereal relativeRe = rhoGas * std::abs(uGas - uDrop) * oldDiameter / muGas;
     relativeRe = (relativeRe > delta_ ? relativeRe : delta_);
     const doublereal mass = rhoDrop_ * (4.0/3.0)*Pi*oldDiameter*oldDiameter*oldDiameter/8.0;
-    const doublereal k = 3.227e-3 + 8.3894e-5*TGas - 1.9858e-8*TGas*TGas; // W/m*K
     const doublereal W_C = 28.97e-3; // molecular weight of air 
-    vector_fp W_V(fuelNum_,0); // molecular weights (kg/mol)
-    vector_fp T_B(fuelNum_,0); // boiling temperatures
-    W_V[0] = 170.0e-3;
-    T_B[0] = 490.0;
-    if (fuelNum_==4)
-    {
-        W_V[1] = 226.0e-3;
-        W_V[2] = 138.0e-3;
-        W_V[3] = 92.00e-3;
-        T_B[1] = 513.0;
-        T_B[2] = 460.0;
-        T_B[3] = 384.0;
-    }
-    doublereal latentHeat = - 6.72216465e-03*oldTemperature*oldTemperature*oldTemperature 
-                            + 8.01138467e+00*oldTemperature*oldTemperature 
-                            - 3.62211999e+03*oldTemperature 
-                            + 9.05036560e+05; // J/kg
-    latentHeat = (latentHeat > 1.0 ? latentHeat : 1.0);
-    const doublereal cpGas = 0.194*TGas + 948.76; // c_p gas
+    doublereal latentHeat = ( getLatentHeat(oldTemperature) > 1.0 ? getLatentHeat(oldTemperature) : 1.0 );
     const doublereal cpDrop = 3.84 * oldTemperature + 1056.88; // c_p droplet
     const doublereal Pr = 0.7;
     const doublereal Sc = 0.7;

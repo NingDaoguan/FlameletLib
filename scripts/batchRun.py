@@ -8,7 +8,7 @@ from multiprocessing import Pool
 import numpy as np
 
 # NumOfProc = os.cpu_count()
-NumOfProc = 2
+NumOfProc = 1
 OverwriteExisting = True
 
 if len(sys.argv) != 2:
