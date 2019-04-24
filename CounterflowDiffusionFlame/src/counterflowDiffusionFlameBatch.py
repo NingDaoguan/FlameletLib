@@ -3,7 +3,7 @@ import numpy as np
 import os
 
 # Create directory for output data files
-data_directory = 'diffusion_flame_batch_data'
+data_directory = './diffusion_flame_batch_data'
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
