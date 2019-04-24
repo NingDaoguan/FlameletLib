@@ -1,9 +1,9 @@
 import cantera as ct
 import numpy as np
-# import os
+import os
 
 # Create directory for output data files
-data_directory = 'patch_data'
+data_directory = './patch_data'
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
