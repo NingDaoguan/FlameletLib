@@ -205,6 +205,35 @@ plt.xlabel(r'$Z \ (-)$',fontsize=fonts1)
 plt.ylabel(r'$\chi \ (1/s)$',fontsize=fonts1)
 # plt.savefig('Z-T.png', dpi=500,bbox_inches='tight')
 
+
+# Plot Z-Yc:T
+plt.figure(figsize=figs)
+for i,file in enumerate(filename):
+    data = np.loadtxt(file, delimiter=',', skiprows = 1)
+    data = np.transpose(data)
+    x = data[xIndex]
+    T = data[TIndex]
+    if xin is 'n':
+        YIN = data[ARIndex]
+        YIN_O = max(YIN[-1], YIN[0])
+    else:
+        YIN = data[N2Index]
+        YIN_O = max(YIN[-1], YIN[0])
+    YIN_F = 0
+    Z = (YIN - YIN_O)/(YIN_F - YIN_O)
+    Yc = data[COIndex] + data[H2Index] + data[CO2Index] + data[H2OIndex]
+    norm = matplotlib.colors.Normalize(vmin=300, vmax=2500)
+    sc = plt.scatter(Z,Yc,c=T,cmap=plt.cm.rainbow,s=20,norm=norm)
+v = [300,500,1000,1500,2000,2500]
+cbar = plt.colorbar(sc,ticks=v)
+cbar.set_label(r'T (K)', fontsize=fonts2)
+for t in cbar.ax.get_yticklabels():
+    t.set_fontsize(fonts2)
+plt.tick_params(labelsize=fonts1)
+plt.xlabel(r'$Z \ (-)$',fontsize=fonts1)
+plt.ylabel(r'$Y_c \ (-)$',fontsize=fonts1)
+# plt.savefig('Z-Yc-T.png', dpi=500,bbox_inches='tight')
+
 '''
 # Plot Flame Index (FI)
 plt.figure(figsize=figs)
