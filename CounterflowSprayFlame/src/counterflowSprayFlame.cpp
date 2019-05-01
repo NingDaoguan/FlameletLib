@@ -9,10 +9,10 @@
 #include "cantera/transport/TransportBase.h"
 #include "cantera/IdealGasMix.h"
 #include "cantera/transport.h"
-#include "Lagrangian.cpp"
-#include "Sim1DSpr.cpp"
-#include "StFlowSpr.cpp"
-#include "OneDimSpr.cpp"
+#include "Lagrangian.h"
+#include "Sim1DSpr.h"
+#include "StFlowSpr.h"
+#include "OneDimSpr.h"
 
 using namespace Cantera;
 
@@ -216,7 +216,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
         {
             compRight.append(gas.speciesName(k));
             compRight.append(":");
-            compRight.append(to_string(xR[k]));
+            compRight.append(std::to_string(xR[k]));
             if (k!=nsp-1) compRight.append(", ");
         }
         right.setMoleFractions(compRight);
@@ -236,7 +236,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
         {
             compRight.append(gas.speciesName(k));
             compRight.append(":");
-            compRight.append(to_string(xF[k]));
+            compRight.append(std::to_string(xF[k]));
             if (k!=nsp-1) compRight.append(", ");
         }
         right.setMoleFractions(compRight);

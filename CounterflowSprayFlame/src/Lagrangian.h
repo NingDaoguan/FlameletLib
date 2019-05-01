@@ -3,6 +3,13 @@
 #ifndef CT_LAGRANGIAN_H
 #define CT_LAGRANGIAN_H
 
+#include <iostream>
+#include <ostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+#include "cantera/base/global.h"
+
 namespace Cantera
 {
 
