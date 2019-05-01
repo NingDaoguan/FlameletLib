@@ -95,10 +95,11 @@ for n in nLoop:
     data1 = np.transpose(data1)
     x = data1[0]
     T = data1[3]
+    he = np.zeros(len(T))
 
     # Read Y
-    Y = data1[5::]
-    Y = np.transpose(Y)
+    Yorig = data1[5::]
+    Y = np.transpose(Yorig)
     ZC = np.dot(Y, muC)
     ZH = np.dot(Y, muH)
     ZO = np.dot(Y, muO)
@@ -117,6 +118,12 @@ for n in nLoop:
     chi = 2 * chi**2 # 2(grad(Z))^2
     Dz = Dz0 * (T/273.0)**1.5 * 101325.0/p # Diffusion coefficient Dz
     chi = Dz*chi # chi = 2D(grad(Z))^2
+
+    # for i,tT in enumerate(T):
+    #     gas.TPY = (T[i],p,Y[i])
+    #     he[i] = gas.h
+
+    # T = he
 
     for i in range(len(names)):
         if names[i] == 'O2':
