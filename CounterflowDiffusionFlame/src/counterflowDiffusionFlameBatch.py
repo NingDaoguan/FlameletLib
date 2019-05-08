@@ -7,7 +7,9 @@ data_directory = './diffusion_flame_batch_data'
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
-print('1:\tJet-A-300K\n2:\tJet-A-300KLe1\n3:\tJet-A-800K\n4:\tJet-A-800KLe1\n5:\tnc12h26-300K\n6:\tnc12h26-300KLe1\n7:\tC2H5OH-300K')
+print(  '1:\tJet-A-300K\n2:\tJet-A-300KLe1\n3:\tJet-A-800K\n'
+        '4:\tJet-A-800KLe1\n5:\tnc12h26-300K\n6:\tnc12h26-300KLe1\n'
+        '7:\tC2H5OH-300K\n8:\tCH4-294K\n')
 x = input()
 x = int(x)
 # PART 1: INITIALIZATION
@@ -112,6 +114,20 @@ elif x==7:
     f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
     f.oxidizer_inlet.T = 300.0  # K
     temperature_limit_extinction = 352  # K
+elif x==8:
+    reaction_mechanism = 'gri30.cti'
+    gas = ct.Solution(reaction_mechanism)
+    width = 0.2 # 200mm wide
+    f = ct.CounterflowDiffusionFlame(gas, width=width)
+    # Define the operating pressure and boundary conditions
+    f.P = 1.e5  # 1 bar
+    f.fuel_inlet.mdot = 0.4 # kg/m^2/s
+    f.fuel_inlet.X = 'CH4:1.0'
+    f.fuel_inlet.T = 294.0  # K
+    f.oxidizer_inlet.mdot = 0.8 # kg/m^2/s
+    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
+    f.oxidizer_inlet.T = 294.0  # K
+    temperature_limit_extinction = 295  # K
 else:
     print("INPUT ERR")
 
