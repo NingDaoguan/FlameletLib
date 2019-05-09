@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <stdexcept>
 
 #include "cantera/thermo.h"
 #include "Inlet1DSpr.h"
@@ -32,7 +33,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     std::string compRight;
     // input from file
     std::ifstream infile("input.txt");
-    if (!infile) std::cerr << "input.txt NOT FOUND!" << std::endl;
+    if (!infile) throw std::runtime_error("input.txt NOT FOUND!");
     std::string name; // name column
     doublereal value; // value column
     size_t fuel = 0; // 0 for Kerosene test
@@ -97,7 +98,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
                 << mdotLeft << " "
                 << mdotRight << std::endl;
     std::cout << std::endl;
-    std::cout << "=====================================================================" << std::endl;
+    std::cout << std::string(69,'=') << std::endl;
 
 
 
@@ -369,8 +370,10 @@ int main(int argc, char *argv[])
         mdotO = atof(argv[2]);
         len = atof(argv[3]);
     }
-    else
+    else {
+        std::cerr << "Usage: counterflowSprayFlame mdotL mdotR len" << std::endl;
         return -1;
+    }
 
     try {
         counterflowDiffusionFlame(mdotF, mdotO, len);
