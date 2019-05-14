@@ -22,9 +22,9 @@ public:
                 doublereal diameterInjection=100e-6,
                 doublereal mdotInjection=0.01);
 
-
+    Lagrangian() = default;
     // setters
-    void setFuel(const std::vector<std::string> fuelName)
+    void setFuel(const std::vector<std::string>& fuelName)
     {
         fuelName_ = fuelName;
         fuelNum_ = fuelName.size();
@@ -35,6 +35,8 @@ public:
         component_.resize(fuelNum_);
         particleJg_.resize(fuelNum_);
         trackComponent_.resize(fuelNum_);
+
+        // Liquid thermophysical properties
         if (fuelName_[0] == "C2H5OH")
         {
             W_V[0] = 46.0e-3;
@@ -145,22 +147,25 @@ public:
     doublereal getHeatTransferRate(doublereal z) const
     {
         if (loopCnt_==0) return 0.0;
-        else if (loopCnt_==1) return 0.1*relaxationFactor_ * linearInterpolate(heatTransferRateField_, z);
-        else return linearInterpolate(heatTransferRateField_, z);
+        else if (loopCnt_==1) return 0.1*linearInterpolate(heatTransferRateField_, z);
+        else return relaxationFactor_ * linearInterpolate(heatTransferRateField_, z)
+                    + (1.0 - relaxationFactor_) * linearInterpolate(oldHeatTransferField_, z);
     }
 
     doublereal getTotalMassTransferRate(doublereal z) const
     {
         if (loopCnt_==0) return 0.0;
-        else if (loopCnt_==1) return relaxationFactor_ * linearInterpolate(totalMassTransferField_, z);
-        else return linearInterpolate(totalMassTransferField_, z);
+        else if (loopCnt_==1) return linearInterpolate(totalMassTransferField_, z);
+        else return relaxationFactor_ * linearInterpolate(totalMassTransferField_, z)
+                    + (1.0 - relaxationFactor_) * linearInterpolate(oldTotalMassTransferField_, z);
     }
 
     doublereal getMassTransferRate(size_t i, doublereal z) const
     {
         if (loopCnt_==0) return 0.0;
-        else if (loopCnt_==1) return relaxationFactor_ * linearInterpolate(massTransferRateField_[i], z);
-        else return linearInterpolate(massTransferRateField_[i], z);
+        else if (loopCnt_==1) return linearInterpolate(massTransferRateField_[i], z);
+        else return relaxationFactor_ * linearInterpolate(massTransferRateField_[i], z)
+                    + (1.0 - relaxationFactor_) * linearInterpolate(oldMassTransferField_[i], z);
     }
 
     doublereal getMassRatio(size_t iz) const
@@ -306,6 +311,7 @@ private:
     vector_fp heatTransferRateField_; // J/m^s/s
     vector_fp oldHeatTransferField_;
     vector_fp totalMassTransferField_;
+    vector_fp oldTotalMassTransferField_;
     std::vector<std::vector<double> > massTransferRateField_; // kg/m^3/s
     std::vector<std::vector<double> > oldMassTransferField_;
     vector_fp oldGrid_;

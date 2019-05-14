@@ -113,9 +113,9 @@ void Lagrangian::evaluateTransferRateField()
         {
             rightLength = zField_[1] - positions_[iParcel];
             dz = zField_[1] - zField_[0];
-            sumLiquid += (rightLength/dz) * (4.0*Pi/3.0) * particleDiameter_[iParcel]
-                                                            * particleDiameter_[iParcel]
-                                                            * particleDiameter_[iParcel]/8.0;
+            sumLiquid += (rightLength/dz) * (4.0*Pi/3.0)* particleDiameter_[iParcel]
+                                                        * particleDiameter_[iParcel]
+                                                        * particleDiameter_[iParcel]/8.0;
         }
     }
     liquidGasMassRatio_.push_back( (sumLiquid*nPerParcel_) / (0.5*dz) );
@@ -192,6 +192,7 @@ void Lagrangian::evaluateTransferRateField()
     {
         oldHeatTransferField_ = heatTransferRateField_;
         oldMassTransferField_ = massTransferRateField_;
+        oldTotalMassTransferField_ = totalMassTransferField_;
         oldGrid_ = zField_;
     }
     else ok_ = true;
