@@ -187,12 +187,15 @@ void Lagrangian::evaluateTransferRateField()
         // residualNorm = residual/(residual0_+delta_);
         std::cout << "RMS residual:\t" << residual << std::endl;
     }
+
+    // Temporary fields
+    // vector_fp tHeatField = heatTransferRateField_;
+    // std::vector<std::vector<double> > tMassField = massTransferRateField_;
     
     if (loopCnt_ == 0)
     {
         oldHeatTransferField_ = heatTransferRateField_;
         oldMassTransferField_ = massTransferRateField_;
-        oldTotalMassTransferField_ = totalMassTransferField_;
         oldGrid_ = zField_;
     }
     else if (residual > 0.01)
@@ -203,19 +206,17 @@ void Lagrangian::evaluateTransferRateField()
             heatTransferRateField_[i] = relaxationFactor_ * heatTransferRateField_[i]
                                         + (1.0 - relaxationFactor_) 
                                         * linearInterpolate(oldHeatTransferField_, oldGrid_, zField_[i]);
-            totalMassTransferField_[i] = relaxationFactor_ * totalMassTransferField_[i]
-                                         + (1.0 - relaxationFactor_)
-                                         * linearInterpolate(oldTotalMassTransferField_, oldGrid_, zField_[i]);
+            totalMassTransferField_[i] = 0.0;
             for (decltype(fuelName_.size()) j=0; j<fuelName_.size(); j++)
             {
                 massTransferRateField_[j][i] = relaxationFactor_ * massTransferRateField_[j][i]
                                             + (1.0 - relaxationFactor_)
                                             * linearInterpolate(oldMassTransferField_[j], oldGrid_, zField_[i]);
+                totalMassTransferField_[i] += massTransferRateField_[j][i];
             }
         }
         oldHeatTransferField_ = heatTransferRateField_;
         oldMassTransferField_ = massTransferRateField_;
-        oldTotalMassTransferField_ = totalMassTransferField_;
         oldGrid_ = zField_;
     }
     else ok_ = true;

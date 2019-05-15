@@ -305,7 +305,6 @@ private:
     vector_fp heatTransferRateField_; // J/m^s/s
     vector_fp oldHeatTransferField_;
     vector_fp totalMassTransferField_;
-    vector_fp oldTotalMassTransferField_;
     std::vector<std::vector<double> > massTransferRateField_; // kg/m^3/s
     std::vector<std::vector<double> > oldMassTransferField_;
     vector_fp oldGrid_;
