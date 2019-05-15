@@ -147,25 +147,19 @@ public:
     doublereal getHeatTransferRate(doublereal z) const
     {
         if (loopCnt_==0) return 0.0;
-        else if (loopCnt_==1) return 0.1*linearInterpolate(heatTransferRateField_, z);
-        else return relaxationFactor_ * linearInterpolate(heatTransferRateField_, z)
-                    + (1.0 - relaxationFactor_) * linearInterpolate(oldHeatTransferField_, z);
+        else return linearInterpolate(heatTransferRateField_, z);
     }
 
     doublereal getTotalMassTransferRate(doublereal z) const
     {
         if (loopCnt_==0) return 0.0;
-        else if (loopCnt_==1) return linearInterpolate(totalMassTransferField_, z);
-        else return relaxationFactor_ * linearInterpolate(totalMassTransferField_, z)
-                    + (1.0 - relaxationFactor_) * linearInterpolate(oldTotalMassTransferField_, z);
+        else return linearInterpolate(totalMassTransferField_, z);
     }
 
     doublereal getMassTransferRate(size_t i, doublereal z) const
     {
         if (loopCnt_==0) return 0.0;
-        else if (loopCnt_==1) return linearInterpolate(massTransferRateField_[i], z);
-        else return relaxationFactor_ * linearInterpolate(massTransferRateField_[i], z)
-                    + (1.0 - relaxationFactor_) * linearInterpolate(oldMassTransferField_[i], z);
+        else return linearInterpolate(massTransferRateField_[i], z);
     }
 
     doublereal getMassRatio(size_t iz) const
