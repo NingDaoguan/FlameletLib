@@ -221,7 +221,7 @@ void Lagrangian::evaluateTransferRateField()
     }
     else ok_ = true;
 
-    if (loopCnt_ > 30) ok_ = true;
+    if (loopCnt_ > 50) ok_ = true;
     loopCnt_++;
 }
 
