@@ -4,6 +4,8 @@ import cantera as ct
 import numpy as np
 import matplotlib.pyplot as plt
 
+p = 101325.0
+
 data_directory = 'tables/'
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
@@ -26,7 +28,6 @@ else:
     raise Exception('Only support the above fuels')
 speciesNames = gas.species_names
 nsp = len(speciesNames)
-progressSpecies = ['CO','H2','CO2','H2O']
 
 # Read first line
 with open('initial_solution.csv') as fi:
@@ -68,31 +69,44 @@ for n in range(0,numLoop+1,1):
 
     filename2 = data_directory + 'flameletTable_{:}.csv'.format(n)
     with open(filename2, 'w+') as fo:
-        line = 'Z,Yc,T'
+        line = 'Z,Yc,omegaYc,T'
         for i in speciesNames:
             line += f',{i}'
-        line += ',omegaYc'
         fo.write(line+'\n')
 
-    data1 = np.loadtxt(filename, delimiter=',', skiprows=1)
-    data1 = np.transpose(data1)
+    data1orig = np.loadtxt(filename, delimiter=',', skiprows=1)
+    data1 = np.transpose(data1orig)
     T = data1[TIndex]
     YAR = data1[ARIndex]
     YARO = max(YAR[-1], YAR[0])
     Z = (YAR - YARO) / (0.0-YARO)
     Yc = data1[H2OIndex] + data1[H2Index] + data1[CO2Index] + data1[COIndex]
 
+    for i in range(len(data1)):
+        if names[i] == speciesNames[0]:
+            speciesStart = i
+
+    # Calculate omegaYc
+    Y = []
+    omegaYc = np.zeros(len(Yc))
+    for i in range(len(Yc)):
+        Y = data1orig[i][speciesStart::]
+        gas.TPY = (T[i], p, Y)
+        omegaYc[i] = gas.net_production_rates[COIndex - speciesStart] \
+                    +gas.net_production_rates[H2Index - speciesStart] \
+                    +gas.net_production_rates[CO2Index - speciesStart] \
+                    +gas.net_production_rates[H2OIndex - speciesStart]
+
+
     data2 = []
     data2.append(list(Z))
     data2.append(list(Yc))
+    data2.append(list(omegaYc))
     ax1.plot(Z,Yc)
-    ax2.plot(Z,T)
+    ax2.plot(Z,omegaYc)
     data2.append(list(T))
-    flag = 0
     for i in range(len(data1)):
-        if names[i] == speciesNames[0]:
-            flag = 1
-        if flag == 1:
+        if i >= speciesStart:
             data2.append(list(data1[i]))
         else:
             pass
