@@ -28,6 +28,7 @@ else:
     raise Exception('Only support the above fuels')
 speciesNames = gas.species_names
 nsp = len(speciesNames)
+molW = gas.molecular_weights
 
 # Read first line
 with open('initial_solution.csv') as fi:
@@ -92,10 +93,10 @@ for n in range(0,numLoop+1,1):
     for i in range(len(Yc)):
         Y = data1orig[i][speciesStart::]
         gas.TPY = (T[i], p, Y)
-        omegaYc[i] = gas.net_production_rates[COIndex - speciesStart] \
-                    +gas.net_production_rates[H2Index - speciesStart] \
-                    +gas.net_production_rates[CO2Index - speciesStart] \
-                    +gas.net_production_rates[H2OIndex - speciesStart]
+        omegaYc[i] = gas.net_production_rates[COIndex - speciesStart] * molW[COIndex - speciesStart] \
+                    +gas.net_production_rates[H2Index - speciesStart] * molW[H2Index - speciesStart] \
+                    +gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
+                    +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
 
 
     data2 = []
