@@ -81,7 +81,8 @@ for n in range(0,numLoop+1,1):
     YAR = data1[ARIndex]
     YARO = max(YAR[-1], YAR[0])
     Z = (YAR - YARO) / (0.0-YARO)
-    Yc = data1[H2OIndex] + data1[H2Index] + data1[CO2Index] + data1[COIndex]
+    # Yc = data1[H2OIndex] + data1[H2Index] + data1[CO2Index] + data1[COIndex]
+    Yc = data1[H2OIndex] + data1[CO2Index]
 
     for i in range(len(data1)):
         if names[i] == speciesNames[0]:
@@ -93,11 +94,12 @@ for n in range(0,numLoop+1,1):
     for i in range(len(Yc)):
         Y = data1orig[i][speciesStart::]
         gas.TPY = (T[i], p, Y)
-        omegaYc[i] = gas.net_production_rates[COIndex - speciesStart] * molW[COIndex - speciesStart] \
-                    +gas.net_production_rates[H2Index - speciesStart] * molW[H2Index - speciesStart] \
-                    +gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
+        # omegaYc[i] = gas.net_production_rates[COIndex - speciesStart] * molW[COIndex - speciesStart] \
+        #             +gas.net_production_rates[H2Index - speciesStart] * molW[H2Index - speciesStart] \
+        #             +gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
+        #             +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
+        omegaYc[i] = gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
                     +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
-
 
     data2 = []
     data2.append(list(Z))
