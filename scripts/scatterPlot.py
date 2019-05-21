@@ -5,7 +5,7 @@ import matplotlib
 
 x = input("Enter loop number:\n")
 x = int(x)
-y = input("Yc(0) or chi(1)?\n")
+y = input("T(0) or omega(1)?\n")
 filename = []
 if x > 1:
     for n in range(x+1):
@@ -29,24 +29,25 @@ for ic,filename1 in enumerate(filename):
     YARO = YAR[0]
     Z1 = data1[0]
     Yc = data1[1]
-    norm = matplotlib.colors.Normalize(vmin=300, vmax=2300)
+    norm = matplotlib.colors.Normalize(vmin=0, vmax=260)
+    # norm = matplotlib.colors.Normalize(vmin=300, vmax=2300)
     sc = plt.scatter(Z1,Yc,c=data1[2],cmap=plt.cm.rainbow,s=2,norm=norm)
 
-v = [300,500,1000,1500,2000]
+# v = [300,500,1000,1500,2000]
+v = [0,50,100,150,200,250]
 cbar = plt.colorbar(sc,ticks=v)
-cbar.set_label(r'T (K)', fontsize=fonts2)
+if y == '0':
+    cbar.set_label(r'T (K)', fontsize=fonts2)
+elif y == '1':
+    cbar.set_label(r'$\dot \omega_{Y_c} \ (kg/m^3 s)$', fontsize=fonts2)
+else:
+    print("Input Error")
 for t in cbar.ax.get_yticklabels():
     t.set_fontsize(fonts2)
 plt.xlim(0,1)
-plt.ylim(0,1200)
+# plt.ylim(0,0.5)
 plt.tick_params(labelsize=fonts2)
 plt.xlabel(r'Z (-)',fontsize=fonts2)
-if y == '0':
-    plt.ylabel(r'$Y_c \ (-)$',fontsize=fonts2)
-elif y == '1':
-    plt.ylabel(r'$\chi \ (-)$',fontsize=fonts2)
-else:
-    print("Input Error")
-
+plt.ylabel(r'$Y_c$ (-)',fontsize=fonts2)
 # plt.savefig('SLF_Z'+y+'.png',dpi=500,bbox_inches='tight')
 plt.show()
