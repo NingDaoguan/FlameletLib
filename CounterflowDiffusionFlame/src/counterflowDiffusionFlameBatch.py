@@ -109,11 +109,11 @@ elif x==7:
     f.P = 1.e5  # 1 bar
     f.fuel_inlet.mdot = 0.5 # kg/m^2/s
     f.fuel_inlet.X = 'C2H5OH:1.0'
-    f.fuel_inlet.T = 352.0  # K
+    f.fuel_inlet.T = 300.0  # K
     f.oxidizer_inlet.mdot = 0.4 # kg/m^2/s
     f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
     f.oxidizer_inlet.T = 300.0  # K
-    temperature_limit_extinction = 352  # K
+    temperature_limit_extinction = 301.0  # K
 elif x==8:
     reaction_mechanism = 'gri30.cti'
     gas = ct.Solution(reaction_mechanism)

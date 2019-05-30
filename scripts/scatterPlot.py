@@ -29,12 +29,16 @@ for ic,filename1 in enumerate(filename):
     YARO = YAR[0]
     Z1 = data1[0]
     Yc = data1[1]
-    norm = matplotlib.colors.Normalize(vmin=0, vmax=260)
-    # norm = matplotlib.colors.Normalize(vmin=300, vmax=2300)
-    sc = plt.scatter(Z1,Yc,c=data1[2],cmap=plt.cm.rainbow,s=2,norm=norm)
 
-# v = [300,500,1000,1500,2000]
-v = [0,50,100,150,200,250]
+    if y == '0':
+        v = [300,500,1000,1500,2000]
+        norm = matplotlib.colors.Normalize(vmin=300, vmax=2300)
+        sc = plt.scatter(Z1,Yc,c=data1[3],cmap=plt.cm.rainbow,s=2,norm=norm)
+    elif y == '1':
+        v = [0,50,100,150,200,250]
+        norm = matplotlib.colors.Normalize(vmin=0, vmax=260)
+        sc = plt.scatter(Z1,Yc,c=data1[2],cmap=plt.cm.rainbow,s=2,norm=norm)
+
 cbar = plt.colorbar(sc,ticks=v)
 if y == '0':
     cbar.set_label(r'T (K)', fontsize=fonts2)

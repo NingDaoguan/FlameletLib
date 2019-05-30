@@ -267,11 +267,11 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     locs[5]=0.7;
     locs[6]=1;
     values[0]=TinLeft;
-    values[1]=0.9*TinLeft+0.1*Tad;
-    values[2]=0.7*Tad+0.3*TinLeft;
+    values[1]=0.8*TinLeft+0.2*Tad;
+    values[2]=0.6*Tad+0.4*TinLeft;
     values[3]=0.8*Tad+0.1*TinLeft+0.1*TinRight;
-    values[4]=0.7*Tad+0.3*TinRight;
-    values[5]=0.9*TinRight+0.1*Tad;
+    values[4]=0.6*Tad+0.4*TinRight;
+    values[5]=0.8*TinRight+0.2*Tad;
     values[6]=TinRight;
     flame.setInitialGuess("T",locs,values);
     values[0]=0.5*a0*(1*width);
@@ -312,7 +312,7 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     ss2 << "mf-" << mdotF << "mo-" << mdotO << "L-" << len << "_raw.txt";
     std::ofstream outfile(ss2.str());
     int np = flow.nPoints();
-    Array2D solution(np,nsp+7,0.0);
+    Array2D solution(np,nsp+6,0.0);
     vector_fp grid;
     grid.resize(np);
     for (int iz=0;iz<np;iz++)
@@ -335,14 +335,13 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
                 flame.setValue(domFlow, i-1,n,0.0);
             }
         }
-        solution(n,nsp+6) = particleCloud.getMassRatio(n);
     }
 
     for (int j=0;j<solution.nColumns();j++)
     {
         if (j==0) outfile << "z";
-        else if (j<solution.nColumns()-1) outfile << flow.componentName(j-1);
-        else outfile << "alpha";
+        else outfile << flow.componentName(j-1);
+
         if (j!=solution.nColumns()-1) outfile << ",";
     }
     outfile << std::endl;

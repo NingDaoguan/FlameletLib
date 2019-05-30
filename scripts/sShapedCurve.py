@@ -30,7 +30,8 @@ for n in nLoop:
     data = np.transpose(data)
     Z = data[0]
     chi = data[1]
-    T = data[2]
+    omega = data[2]
+    T = data[3]
 
     for j,iZ in enumerate(Z):
         if iZ > Zst:

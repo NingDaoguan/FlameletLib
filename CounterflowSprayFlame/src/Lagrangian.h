@@ -118,8 +118,9 @@ public:
     {
         YField_.resize(fuelNum_);
 
-        for (int i=0;i<fuelNum_;i++)
+        for (int i=0;i<fuelNum_;i++) {
             YField_[i] = YField[i];
+        }
     }
 
     void setMuField(const vector_fp& muField)
@@ -143,7 +144,7 @@ public:
     }
 
 
-    // getters
+    // access
     doublereal getHeatTransferRate(doublereal z) const
     {
         if (loopCnt_==0) return 0.0;
@@ -231,11 +232,13 @@ private:
 
     void heatAndMassTransfer(const int iParcel);
 
+    // [J/kg]
     doublereal getLatentHeat(const doublereal T)
     {
         return lat_a0 + lat_a1*T + lat_a2*T*T + lat_a3*T*T*T;
     }
 
+    // [J/kg/K]
     doublereal getCpL(const doublereal T)
     {
         return cp_a0 + cp_a1*T;
@@ -302,7 +305,7 @@ private:
     vector_fp cpField_;
 
     vector_fp liquidGasMassRatio_; // liquid phase
-    vector_fp heatTransferRateField_; // J/m^s/s
+    vector_fp heatTransferRateField_; // J/m^3/s
     vector_fp oldHeatTransferField_;
     vector_fp totalMassTransferField_;
     std::vector<std::vector<double> > massTransferRateField_; // kg/m^3/s

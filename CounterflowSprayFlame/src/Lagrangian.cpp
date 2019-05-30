@@ -105,7 +105,7 @@ void Lagrangian::evaluateTransferRateField()
     doublereal rightLength;
     // left-most point
     rhoGas = rhoField_[0];
-    if (rhoGas<delta_) rhoGas=0.8;
+    if (rhoGas<delta_) rhoGas=1.1;
     sumLiquid=0.0;
     for (int iParcel=0;iParcel<parcelNumber_;iParcel++)
     {
@@ -129,7 +129,7 @@ void Lagrangian::evaluateTransferRateField()
         doublereal leftz = zField_[iz-1];
         doublereal rightz = zField_[iz+1];
         rhoGas = rhoField_[iz];
-        if (rhoGas<delta_) rhoGas=0.8;
+        if (rhoGas<delta_) rhoGas=1.1;
         // find
         sumLiquid = 0.0;
         doublereal sumQg = 0.0;
@@ -194,6 +194,10 @@ void Lagrangian::evaluateTransferRateField()
     
     if (loopCnt_ == 0)
     {
+        for (decltype(zField_.size()) i=0; i<zField_.size(); i++)
+        {
+            heatTransferRateField_[i] = relaxationFactor_ * heatTransferRateField_[i];
+        }
         oldHeatTransferField_ = heatTransferRateField_;
         oldMassTransferField_ = massTransferRateField_;
         oldGrid_ = zField_;
@@ -221,7 +225,7 @@ void Lagrangian::evaluateTransferRateField()
     }
     else ok_ = true;
 
-    if (loopCnt_ > 50) ok_ = true;
+    if (loopCnt_ > 60) ok_ = true;
     loopCnt_++;
 }
 
@@ -239,12 +243,12 @@ void Lagrangian::heatAndMassTransfer(const int iParcel)
 
     // gas phase information
     doublereal rhoGas = this->linearInterpolate(rhoField_,zDrop);
-    if (rhoGas<delta_) rhoGas=0.8;
+    if (rhoGas<delta_) rhoGas=1.1;
     doublereal uGas = this->linearInterpolate(uField_, zDrop);
     doublereal muGas = this->linearInterpolate(muField_, zDrop);
-    if (muGas<delta_) muGas=1e-5;
-    doublereal k = this->linearInterpolate(conField_, zDrop); // W/m*K
-    k = (k > delta_ ? k : 0.0266);
+    if (muGas<delta_) muGas=1.7e-5;
+    // doublereal k = this->linearInterpolate(conField_, zDrop); // W/m*K
+    // k = (k > delta_ ? k : 0.0266);
     doublereal cpGas = this->linearInterpolate(cpField_, zDrop);
     cpGas = (cpGas > delta_ ? cpGas : 1006.0);
     doublereal TGas = std::max( this->linearInterpolate(TField_,zDrop), 273.15 );
@@ -335,8 +339,8 @@ void Lagrangian::heatAndMassTransfer(const int iParcel)
     }
     else {newTemperature = oldTemperature;}
 
-    // newQg = Qg*mass*cpDrop;
-    newQg = cpDrop*mass*(newTemperature - oldTemperature) / dt_;
+    newQg = Qg*sumMass*cpDrop;
+    // newQg = cpDrop*mass*(newTemperature - oldTemperature) / dt_;
     for (int i=0;i<fuelNum_;i++)
     {
         particleJg_[i][iParcel] = Jg[i];
@@ -351,10 +355,10 @@ doublereal Lagrangian::force(const int iParcel) const
     const doublereal uDrop = particleVelocity_[iParcel];
 
     doublereal rhoGas = this->linearInterpolate(rhoField_,zDrop);
-    if (rhoGas<delta_) rhoGas=0.8;
+    if (rhoGas<delta_) rhoGas=1.1;
     doublereal uGas = this->linearInterpolate(uField_,zDrop);
     doublereal muGas = this->linearInterpolate(muField_,zDrop);
-    if (muGas<delta_) muGas=1e-5;
+    if (muGas<delta_) muGas=1.7e-5;
     doublereal Red = rhoGas * std::abs(uGas - uDrop) * d0 / muGas;
     if (Red<delta_) return 0.0;
 
