@@ -1,180 +1,177 @@
-#include <iostream>
-#include <ostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <stdexcept>
-
 #include "cantera/thermo.h"
-#include "Inlet1DSpr.h"
 #include "cantera/transport/TransportBase.h"
 #include "cantera/IdealGasMix.h"
 #include "cantera/transport.h"
-#include "Lagrangian.h"
+#include "Inlet1DSpr.h"
 #include "Sim1DSpr.h"
 #include "StFlowSpr.h"
-#include "OneDimSpr.h"
+#include "Lagrangian.h"
+
+#include <iostream>
+#include <string>
+#include <stdexcept>
+#include <fstream>
+#include <sstream>
 
 using namespace Cantera;
 
-void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal len)
+void counterflowSprayFlame(doublereal mdotL, doublereal mdotR, doublereal len)
 {
-    size_t tstepsSize = 6; // take tsteps[i] time steps
-    const int tsteps[tstepsSize] = {10,20,10,20,10,20};
-    doublereal p0 = OneAtm;
-    std::string kinFileName;
-    std::string kinPhase;
+    // data
+    doublereal p0(101325.0);
+    std::string kinFileName("Ethanol_31.cti");
+    doublereal C_atoms(2);
+    doublereal H_atoms(6);
+    doublereal O_atoms(1);
     std::vector<std::string> fuelName;
     std::vector<double> fuelX;
-    doublereal C_atoms;
-    doublereal H_atoms;
-    doublereal O_atoms;
     std::string compLeft;
     std::string compRight;
-    // input from file
+    
+    doublereal mdotInjection; // kg/m^2/s
+    doublereal phi(1.0); // equivalence ratio
+    doublereal diameterInjection(50e-06); // m
+    doublereal uInjection(0.2); // m/s
+    doublereal TInjection(300.0); // K
+    doublereal LagrangianRelaxationFactor(1.0);
+    doublereal TinLeft(300.0); // fuel side
+    doublereal TinRight(300.0); // oxidizer side
+    doublereal a0(40);
+    int points(41);
+    bool ignition(false); // 1 with ignition
+    const doublereal mdotLeft = mdotL; // kg/m^2/s
+    const doublereal mdotRight = mdotR; // kg/m^2/s
+    const doublereal width = len; // m
+
+
+    // read from input.txt
     std::ifstream infile("input.txt");
     if (!infile) throw std::runtime_error("input.txt NOT FOUND!");
     std::string name; // name column
-    doublereal value; // value column
-    size_t fuel = 0; // 0 for Kerosene test
-    doublereal mdotInjection; // kg/m^2/s
-    doublereal phi = 1.0;
-    doublereal diameterInjection = 100e-6; // m
-    doublereal uInjection = 0.2; // m/s
-    doublereal TInjection = 300; // K
-    doublereal LagrangianRelaxationFactor = 1.0;
-    doublereal TinLeft = 300; // fuel side
-    doublereal TinRight = 300; // oxidizer side
-    doublereal Tvapor = 480;
-    doublereal Teq;
-    doublereal mdotLeft = mdotF; // kg/m^2/s
-    doublereal mdotRight = mdotO; // kg/m^2/s
-    size_t points = 51;
-    doublereal width = len;
-    doublereal a0 = 50;
-    size_t ignition = 0; // 1 with ignition
-    size_t rightType = 0; // 0 for air, 1 for product and 2 for fuel @ right side
+    std::string value; // value column
     while (infile >> name)
     {
         infile >> value;
-        if (name == "fuel")
-            { fuel = size_t(value); continue; }
-        if (name == "points")
-            { points = size_t(value); continue; }
-        if (name == "phi")
-            { phi = value; continue; }
-        if (name == "diameterInjection")
-            { diameterInjection = value; continue; }
-        if (name == "uInjection")
-            { uInjection = value; continue; }
-        if (name == "TInjection")
-            { TInjection = value; continue; }
-        if (name == "LagrangianRelaxationFactor")
-            { LagrangianRelaxationFactor = value; continue; }
-        if (name == "TinLeft")
-            { TinLeft = value; continue; }
-        if (name == "TinRight")
-            { TinRight = value; continue; }
-        if (name == "a0")
-            { a0 = value; continue; }
-        if (name=="ignition")
-            { ignition = size_t(value); continue; }
-        if (name=="rightType")
-            { rightType = size_t(value); continue; }
+        if (name == "kinFileName")
+            { kinFileName = value; continue; }
+        else if (name == "C_atoms")
+            { C_atoms = std::stod(value); continue; }
+        else if (name == "H_atoms")
+            { H_atoms = std::stod(value); continue; }
+        else if (name == "O_atoms")
+            { O_atoms = std::stod(value); continue; }
+        else if (name == "fuelName") {
+            if (value != "(") std::cerr << "fuelName ( fuel1 fuel2 )";
+            while (infile >> value) {
+                if (value == ")") break;
+                else fuelName.push_back(value);
+            }
+        }
+        else if (name == "fuelX") {
+            if (value != "(") std::cerr << "fuelX ( fuelX1 fuelX2 )";
+            while (infile >> value) {
+                if (value == ")") break;
+                else fuelX.push_back(std::stod(value));
+            }
+        }
+        else if (name == "p0")
+            { p0 = std::stod(value); continue; }
+        else if (name == "compLeft")
+            { compLeft = value; continue; }
+        else if (name == "compRight")
+            { compRight = value; continue; }
+        else if (name == "phi")
+            { phi = std::stod(value); continue; }
+        else if ( name == "diameterInjection")
+            { diameterInjection = std::stod(value); continue; }
+        else if (name == "TInjection")
+            { TInjection = std::stod(value); continue; }
+        else if (name == "LagrangianRelaxationFactor")
+            { LagrangianRelaxationFactor = std::stod(value); continue; }
+        else if (name == "TinLeft")
+            { TinLeft = std::stod(value); continue; }
+        else if (name == "TinRight")
+            { TinRight = std::stod(value); continue; }
+        else if (name == "a0")
+            { a0 = std::stod(value); continue; }
+        else if (name == "points")
+            { points = std::stoi(value); continue; }
+        else if (name=="ignition") {
+            ignition = (value == "true") ? true : false;
+        }
+        else continue;
     }
     doublereal minGrid = diameterInjection;
-    #include "FuelInfo.h"
     std::cout << "#Input Parameters" << std::endl;
     std::cout << "#\tDomain      :\t"
-                << points << " "
-                << width << std::endl;
+                << points << "\t"
+                << len << std::endl;
     std::cout << "#\tLagrangian  :\t"
-                << phi << " "
-                << diameterInjection << " "
+                << phi << "\t"
+                << diameterInjection << "\t"
                 << TInjection << std::endl;
     std::cout << "#\tTemperature :\t"
-                << TinLeft << std::endl;
+                << TinLeft << "\t"
+                << TinRight << std::endl;
     std::cout << "#\tmdot        :\t"
-                << mdotLeft << " "
+                << mdotLeft << "\t"
                 << mdotRight << std::endl;
-    std::cout << std::endl;
-    std::cout << std::string(69,'=') << std::endl;
 
 
-
-    // create gas, Lagrangian particle cloud and flow field
-    IdealGasMix gas(kinFileName, kinPhase);
+    // create gas
+    IdealGasMix gas(kinFileName, "gas");
     size_t nsp = gas.nSpecies();
-    std::cout << "\nNumber of species:\t" << nsp << std::endl;
+    std::cout << "#\tNumber of species\t:\t" << nsp << std::endl;
 
-    // calculate x according to phi
+    // set equivalence ratio
     vector_fp x(nsp, 0.0);
     vector_fp y(nsp, 0.0);
-    doublereal mixtureFraction = 0.0;
+    doublereal mixtureFraction(0.0);
     doublereal ax = C_atoms + H_atoms / 4.0 - O_atoms / 2.0;
     doublereal fa_stoic = 1.0 / (4.76 * ax);
     for (size_t i=0;i<fuelName.size();i++)
     {
         x[gas.speciesIndex(fuelName[i])] = fuelX[i];
     }
-    if (fuel!=0)
-    {
-        x[gas.speciesIndex("O2")] = 0.21 / phi / fa_stoic;
-        x[gas.speciesIndex("N2")] = 0.78 / phi / fa_stoic;
-        x[gas.speciesIndex("AR")] = 0.01 / phi / fa_stoic;
-    }
-    else
-    {
-        x[gas.speciesIndex("O2")] = 0.21 / phi / fa_stoic;
-        x[gas.speciesIndex("N2")] = 0.79 / phi / fa_stoic;
-    }
-    gas.setState_TPX(Tvapor, p0, x.data());
+    x[gas.speciesIndex("O2")] = 0.21 / phi / fa_stoic;
+    x[gas.speciesIndex("N2")] = 0.78 / phi / fa_stoic;
+    x[gas.speciesIndex("AR")] = 0.01 / phi / fa_stoic;
+    gas.setState_TPX(TInjection, p0, x.data());
     gas.getMassFractions(&y[0]);
     for (size_t i=0;i<fuelName.size();i++)
     {
         mixtureFraction += y[gas.speciesIndex(fuelName[i])];
     }
+    std::cout << "#\tMixture fraction\t:\t" << mixtureFraction << std::endl;
+    mdotInjection = mdotLeft*mixtureFraction / (1 - mixtureFraction);
+    std::cout << "#\tmdotInjection\t\t:\t" << mdotInjection << std::endl;
+    gas.equilibrate("HP");
+    doublereal Tad = gas.temperature();
     doublereal yI[nsp];
     doublereal* yIn = &yI[0];
     gas.getMassFractions(yIn);
 
-    std::cout << "Mixture fraction:\t" << mixtureFraction << std::endl;
-    mdotInjection = mdotLeft*mixtureFraction / (1 - mixtureFraction);
-    std::cout << "mdotInjection:\t" << mdotInjection << std::endl;
-    gas.equilibrate("HP");
-    doublereal Tad = gas.temperature();
 
-
+    // cloud
+    Lagrangian cloud(diameterInjection, mdotInjection, TInjection);
+    cloud.setFuel(fuelName);
     std::stringstream ss1;
-    ss1 << "LAGmf-" << mdotF << "mo-" << mdotO << "L-" << len << "_raw.txt";
-    std::ofstream LagrangianOutfile(ss1.str());
-    std::ofstream& LagrangianOutfileRef = LagrangianOutfile;
-    Lagrangian particleCloud(LagrangianOutfileRef, ignition, diameterInjection, mdotInjection);
-    particleCloud.setFuel(fuelName);
-    particleCloud.setInjectionVelocity(uInjection);
-    particleCloud.setInjectionTemperature(TInjection);
-    particleCloud.setRelaxationFractor(LagrangianRelaxationFactor);
-    particleCloud.setPressure(p0);
-    Lagrangian& particleCloudRef = particleCloud;
-    StFlow flow(particleCloudRef, &gas, nsp, points);
+    ss1 << "LAGml-" << mdotL << "mr-" << mdotR << "L-" << len << "_raw.csv";
+    cloud.outfile(ss1.str());
+
+    // setup flow
+    StFlow flow(&gas, nsp, points);
     flow.setAxisymmetricFlow();
-    flow.setFuelName(fuelName);
-
-
-    // flow configuration
+    flow.setupCloud(cloud);
+    cloud.flow(flow);
     doublereal zpoints[points];
     doublereal* z = &zpoints[0];
-    doublereal dz = width / ((doublereal)(points-1));
-    std::cout << "\nGrid points:" << std::endl;
-    for (int iz=0;iz<points;iz++)
-    {
-        z[iz] = ((doublereal)iz)*dz;
-        std::cout << z[iz] << " ";
-        if (iz == points-1)
-            std::cout << std::endl;
+    doublereal dz = len / (points-1);
+    for (int iz=0; iz<points; iz++) {
+        z[iz] = iz*dz;
     }
     flow.setupGrid(points,z);
-    Transport* tr = newTransportMgr("Mix",&gas);
+    Transport* tr = newTransportMgr("Mix", &gas);
     flow.setTransport(*tr);
     flow.setKinetics(gas);
     Inlet1D left;
@@ -182,81 +179,23 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     left.setMdot(mdotLeft);
     left.setTemperature(TinLeft);
     Inlet1D right;
-
-    for (size_t i=0;i<fuelName.size();i++)
-    {
-        x[gas.speciesIndex(fuelName[i])] = fuelX[i];
-    }
-    if (fuel!=0)
-    {
-        x[gas.speciesIndex("O2")] = 0.21 / (phi) / fa_stoic;
-        x[gas.speciesIndex("N2")] = 0.78 / (phi) / fa_stoic;
-        x[gas.speciesIndex("AR")] = 0.01 / (phi) / fa_stoic;
-    }
-    else
-    {
-        x[gas.speciesIndex("O2")] = 0.21 / (phi) / fa_stoic;
-        x[gas.speciesIndex("N2")] = 0.79 / (phi) / fa_stoic;
-    }
-    gas.setState_TPX(Tvapor, p0, x.data());
-    vector_fp xR(nsp, 0.0);
-    gas.equilibrate("HP");
-    gas.getMoleFractions(&xR[0]);
-    Teq = gas.temperature();
-    if (rightType==0)
-    {    
-        right.setMoleFractions(compRight);
-        right.setMdot(mdotRight);
-        right.setTemperature(TinRight);
-    }
-    else if (rightType==1)
-    {
-        TinRight = Teq;
-        compRight = "";
-        for (size_t k=0; k<nsp; k++)
-        {
-            compRight.append(gas.speciesName(k));
-            compRight.append(":");
-            compRight.append(std::to_string(xR[k]));
-            if (k!=nsp-1) compRight.append(", ");
-        }
-        right.setMoleFractions(compRight);
-        right.setMdot(mdotRight);
-        right.setTemperature(TinRight);
-    }
-    else
-    {
-        TinRight = Tvapor;
-        compRight = "";
-        vector_fp xF(nsp,0.0);
-        for (size_t i=0;i<fuelName.size();i++)
-        {
-            xF[gas.speciesIndex(fuelName[i])] = fuelX[i];
-        }
-        for (size_t k=0; k<nsp; k++)
-        {
-            compRight.append(gas.speciesName(k));
-            compRight.append(":");
-            compRight.append(std::to_string(xF[k]));
-            if (k!=nsp-1) compRight.append(", ");
-        }
-        right.setMoleFractions(compRight);
-        right.setMdot(mdotRight);
-        right.setTemperature(TinRight);
-    }
+    right.setMoleFractions(compRight);
+    right.setMdot(mdotRight);
+    right.setTemperature(TinRight);
     std::vector<Domain1D*> domains;
     domains.push_back(&left);
     domains.push_back(&flow);
     domains.push_back(&right);
     Sim1D flame(domains);
-    std::cout << "\nBoundary conditions @ left side: " << std::endl;
+    flame.setupCloud(cloud);
+    std::cout << "Boundary conditions @ left side: " << std::endl;
     left.showSolution(0);
     std::cout << "Boundary conditions @ right side: " << std::endl;
     right.showSolution(0);
 
 
     // init
-    if (ignition == 0) Tad = TinLeft;
+    if (ignition == false) Tad = TinLeft;
     vector_fp locs(7);
     vector_fp values(7);
     locs[0]=0;
@@ -297,19 +236,17 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
 
     // solve
     size_t domFlow = 1;
-    flame.setMaxGridPoints(domFlow,2000);
+    flame.setMaxGridPoints(domFlow,1000);
     flame.setGridMin(domFlow, minGrid);
     flow.setPressure(p0);
     flow.solveEnergyEqn();
-    flame.setRefineCriteria(domFlow,10.0,0.7,0.7,-0.1);
-    // flame.setRefineCriteria(domFlow,10.0,1,1,-0.1);
-    flame.setTimeStep(1.0e-5,tstepsSize,&tsteps[0]);
+    flame.setRefineCriteria(domFlow,10.0,0.6,0.6,-0.1);
     flame.solve(1,true);
 
 
     // output
     std::stringstream ss2;
-    ss2 << "mf-" << mdotF << "mo-" << mdotO << "L-" << len << "_raw.txt";
+    ss2 << "ml-" << mdotL << "mr-" << mdotR << "L-" << len << "_raw.csv";
     std::ofstream outfile(ss2.str());
     int np = flow.nPoints();
     Array2D solution(np,nsp+6,0.0);
@@ -357,16 +294,17 @@ void counterflowDiffusionFlame(doublereal mdotF, doublereal mdotO, doublereal le
     }
 }
 
+
+
 int main(int argc, char *argv[])
 {
-    doublereal mdotF = 0.2;
-    doublereal mdotO = 0.2;
-    doublereal len = 0.1;
+    doublereal mdotL = 0.2;
+    doublereal mdotR = 0.2;
+    doublereal len = 0.02;
 
-    if (argc == 4)
-    {
-        mdotF = atof(argv[1]);
-        mdotO = atof(argv[2]);
+    if (argc == 4) {
+        mdotL = atof(argv[1]);
+        mdotR = atof(argv[2]);
         len = atof(argv[3]);
     }
     else {
@@ -375,7 +313,7 @@ int main(int argc, char *argv[])
     }
 
     try {
-        counterflowDiffusionFlame(mdotF, mdotO, len);
+        counterflowSprayFlame(mdotL, mdotR, len);
         return 0;
     } catch (CanteraError& err) {
         std::cout << err.what() << std::endl;

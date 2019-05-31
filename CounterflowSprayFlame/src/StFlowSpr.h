@@ -28,6 +28,7 @@ const size_t c_offset_E = 4; // electric poisson's equation
 const size_t c_offset_Y = 5; // mass fractions
 
 class Transport;
+class Lagrangian;
 
 /**
  *  This class represents 1D flow domains that satisfy the one-dimensional
@@ -46,8 +47,7 @@ public:
     //!     to evaluate all thermodynamic, kinetic, and transport properties.
     //! @param nsp Number of species.
     //! @param points Initial number of grid points
-    StFlow(Lagrangian& particleCloud, IdealGasPhase* ph = 0, size_t nsp = 1, size_t points = 1);
-
+    StFlow(IdealGasPhase* ph = 0, size_t nsp = 1, size_t points = 1);
 
     //! @name Problem Specification
     //! @{
@@ -225,6 +225,22 @@ public:
         return m_rho[j];
     }
 
+    const vector_fp& density() const {
+        return m_rho;
+    }
+
+    const vector_fp& viscosity() const {
+        return m_visc;
+    }
+
+    const vector_fp& cp() const {
+        return m_cp;
+    }
+
+    size_t nsp() const {
+        return m_nsp;
+    }
+
     virtual bool fixed_mdot() {
         return (domainType() != cFreeFlow);
     }
@@ -261,18 +277,11 @@ public:
         return m_kExcessRight;
     }
 
-
-    // New member functions start here
-    // update steady state lagrangian infomation
-    virtual bool updateSSLagrangian(const vector_fp& solutionRef) const;
-
-    void setFuelName(std::vector<std::string> name)
-    {
-        fuelName_ = name;
+    void setupCloud(const Lagrangian& cloud) {
+        cloud_ = &cloud;
     }
 
 protected:
-
     doublereal wdot(size_t k, size_t j) const {
         return m_wdot(k,j);
     }
@@ -464,13 +473,6 @@ protected:
 
     bool m_dovisc;
 
-
-    // New member data
-    Lagrangian& parcel_;
-
-    std::vector<std::string> fuelName_;
-
-
     //! Update the transport properties at grid points in the range from `j0`
     //! to `j1`, based on solution `x`.
     virtual void updateTransport(doublereal* x, size_t j0, size_t j1);
@@ -484,6 +486,49 @@ public:
 
 private:
     vector_fp m_ybar;
+
+    // lagrangian particle cloud
+    const Lagrangian* cloud_;
+};
+
+/**
+ * A class for axisymmetric stagnation flows.
+ *
+ * @deprecated To be removed after Cantera 2.4. Use class StFlow with the
+ *     StFlow::setAxisymmetricFlow() method instead.
+ *
+ * @ingroup onedim
+ */
+class AxiStagnFlow : public StFlow
+{
+public:
+    AxiStagnFlow(IdealGasPhase* ph = 0, size_t nsp = 1, size_t points = 1) :
+        StFlow(ph, nsp, points) {
+        m_dovisc = true;
+        m_type = cAxisymmetricStagnationFlow;
+        warn_deprecated("Class AxiStagnFlow is deprecated",
+     "Use StFlow with setAxisymmetricFlow() instead. To be removed after Cantera 2.4.");
+    }
+};
+
+/**
+ * A class for freely-propagating premixed flames.
+ *
+ * @deprecated To be removed after Cantera 2.4. Use class StFlow with the
+ *     StFlow::setFreeFlow() method instead.
+ *
+ * @ingroup onedim
+ */
+class FreeFlame : public StFlow
+{
+public:
+    FreeFlame(IdealGasPhase* ph = 0, size_t nsp = 1, size_t points = 1) :
+        StFlow(ph, nsp, points) {
+        m_dovisc = false;
+        m_type = cFreeFlow;
+        warn_deprecated("Class FreeFlame is deprecated",
+     "Use StFlow with setFreeFlow() instead. To be removed after Cantera 2.4.");
+    }
 };
 
 }

@@ -13,7 +13,7 @@ using namespace std;
 namespace Cantera
 {
 
-StFlow::StFlow(Lagrangian& particleCloud, IdealGasPhase* ph, size_t nsp, size_t points) :
+StFlow::StFlow(IdealGasPhase* ph, size_t nsp, size_t points) :
     Domain1D(nsp+c_offset_Y, points),
     m_press(-1.0),
     m_nsp(nsp),
@@ -28,8 +28,7 @@ StFlow::StFlow(Lagrangian& particleCloud, IdealGasPhase* ph, size_t nsp, size_t 
     m_kExcessLeft(0),
     m_kExcessRight(0),
     m_zfixed(Undef),
-    m_tfixed(Undef),
-    parcel_(particleCloud)
+    m_tfixed(Undef)
 {
     m_type = cFlowType;
     m_points = points;
@@ -94,7 +93,6 @@ StFlow::StFlow(Lagrangian& particleCloud, IdealGasPhase* ph, size_t nsp, size_t 
     m_kRadiating[0] = m_thermo->speciesIndex("CO2");
     m_kRadiating[1] = m_thermo->speciesIndex("H2O");
 }
-
 
 void StFlow::resize(size_t ncomponents, size_t points)
 {
@@ -313,7 +311,6 @@ void StFlow::evalResidual(double* x, double* rsd, int* diag,
     // polynomials are taken from [http://www.sandia.gov/TNF/radiation.html].
 
     if (m_do_radiation) {
-
         // variable definitions for the Planck absorption coefficient and the
         // radiation calculation:
         doublereal k_P_ref = 1.0*OneAtm;
@@ -411,7 +408,7 @@ void StFlow::evalResidual(double* x, double* rsd, int* diag,
             // set residual of poisson's equ to zero
             rsd[index(c_offset_E, j)] = x[index(c_offset_E, j)];
 
-            //-------------------------------------------------
+            //------------------------------------------------
             //    Radial momentum equation
             //
             //    \rho dV/dt + \rho u dV/dz + \rho V^2
@@ -438,22 +435,6 @@ void StFlow::evalResidual(double* x, double* rsd, int* diag,
                 = (m_wt[k]*(wdot(k,j))
                    - convec - diffus)/m_rho[j]
                   - rdt*(Y(x,k,j) - Y_prev(k,j));
-
-                // evaporation from Lagrangian particle cloud
-                // multi-component evaporation
-                rsd[index(c_offset_Y + k, j)] += ( -parcel_.getTotalMassTransferRate(z(j))
-                                            * Y(x,k,j) ) / m_rho[j];
-
-                for (size_t ik=0;ik<fuelName_.size();ik++)
-                {
-                    if (m_thermo->speciesName(k) == fuelName_[ik])
-                    {
-                        rsd[index(c_offset_Y + k, j)] += ( parcel_.getMassTransferRate(ik, z(j))) / m_rho[j];
-                        break;
-                    }
-                    else continue;
-                }
-
                 diag[index(c_offset_Y + k, j)] = 1;
             }
 
@@ -484,14 +465,9 @@ void StFlow::evalResidual(double* x, double* rsd, int* diag,
 
                 rsd[index(c_offset_T, j)] = - m_cp[j]*rho_u(x,j)*dtdzj
                                             - divHeatFlux(x,j) - sum - sum2;
-
-                // from Lagrangian particle cloud
-                rsd[index(c_offset_T, j)] -= parcel_.getHeatTransferRate( z(j) );
-
                 rsd[index(c_offset_T, j)] /= (m_rho[j]*m_cp[j]);
                 rsd[index(c_offset_T, j)] -= rdt*(T(x,j) - T_prev(j));
                 rsd[index(c_offset_T, j)] -= (m_qdotRadiation[j] / (m_rho[j] * m_cp[j]));
-
                 diag[index(c_offset_T, j)] = 1;
             } else {
                 // residual equations if the energy equation is disabled
@@ -976,10 +952,6 @@ void StFlow::evalContinuity(size_t j, double* x, double* rsd, int* diag, double 
         rsd[index(c_offset_U,j)] =
             -(rho_u(x,j+1) - rho_u(x,j))/m_dz[j]
             -(density(j+1)*V(x,j+1) + density(j)*V(x,j));
-
-        // continuity source from Lagrangian particle cloud
-        rsd[index(c_offset_U,j)] += parcel_.getTotalMassTransferRate( z(j) );
-
     } else if (domainType() == cFreeFlow) {
         if (grid(j) > m_zfixed) {
             rsd[index(c_offset_U,j)] =
@@ -999,81 +971,5 @@ void StFlow::evalContinuity(size_t j, double* x, double* rsd, int* diag, double 
         }
     }
 }
-
-
-// New member functions
-bool StFlow::updateSSLagrangian(const vector_fp& solutionRef) const
-{
-    size_t solutionLength = solutionRef.size();
-    size_t zLength = solutionLength/(m_nsp+c_offset_Y);
-
-    vector_fp zField;
-    vector_fp rhoField;
-    vector_fp velocityField;
-    vector_fp TField;
-    std::vector<std::vector<double> > YField(fuelName_.size());
-    
-    zField = grid();
-    for (int j=0;j<zField.size();j++)
-    {
-        doublereal rhoj = density(j);
-        rhoField.push_back(rhoj);
-    }
-
-    std::vector<size_t> fuelIndex(fuelName_.size());
-    
-    for (int ik=0;ik<fuelName_.size();ik++)
-        fuelIndex[ik] = componentIndex(fuelName_[ik]);
-
-    int cnt=0;
-    std::cout << "\n****Temperature Field****" << std::endl;
-    for (size_t i=0;i<solutionLength;i++)
-    {
-        if (i%(m_nsp+c_offset_Y) == 0)
-        {
-            velocityField.push_back(solutionRef[i]);
-            cnt++;
-        }
-
-        if (i%(m_nsp+c_offset_Y) == 2)
-        {
-            TField.push_back(solutionRef[i]);
-            std::cout << TField[cnt-1] << " ";
-        }
-        for (int ik=0;ik<fuelName_.size();ik++)
-        {
-            if (i%(m_nsp+c_offset_Y) == fuelIndex[ik])
-            {
-                YField[ik].push_back(solutionRef[i]);
-            }
-        }
-
-        if (i==solutionLength-1) std::cout << std::endl;
-    }
-
-
-    // pass by reference
-    std::cout << "\nzField size: #\t" << zField.size() << std::endl;
-    std::cout << "YField size: " << YField.size() << std::endl;
-    vector_fp& zFieldRef = zField;
-    vector_fp& rhoFieldRef = rhoField;
-    vector_fp& velocityFieldRef = velocityField;
-    vector_fp& TFieldRef = TField;
-    std::vector<std::vector<double> >& YFieldRef = YField;
-    parcel_.setZField(zFieldRef);
-    parcel_.setRhoField(rhoFieldRef);
-    parcel_.setVelocityField(velocityFieldRef);
-    parcel_.setTemperatureField(TFieldRef);
-    parcel_.setMassFractionField(YFieldRef);
-    parcel_.setMuField(m_visc);
-    parcel_.setConField(m_tcon);
-    parcel_.setCpField(m_cp);
-
-    parcel_.solve();
-    parcel_.write();
-
-    return parcel_.checkOK();
-}
-
 
 } // namespace

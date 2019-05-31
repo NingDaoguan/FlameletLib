@@ -9,6 +9,7 @@
 #define CT_SIM1D_H
 
 #include "OneDimSpr.h"
+#include "Lagrangian.h"
 
 namespace Cantera
 {
@@ -219,10 +220,8 @@ public:
         m_steady_callback = callback;
     }
 
-    // New member functions
-    size_t anotherLagrLoop(size_t newLagr)
-    {
-        return newLagr;
+    void setupCloud(Lagrangian& cloud) {
+        cloud_ = &cloud;
     }
 
 protected:
@@ -262,6 +261,9 @@ private:
      * @return 0 if successful, -1 on failure
      */
     int newtonSolve(int loglevel);
+
+    // lagrangian particle cloud
+    Lagrangian* cloud_;
 };
 
 }

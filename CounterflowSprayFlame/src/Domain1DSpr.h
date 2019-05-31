@@ -480,9 +480,6 @@ public:
         m_force_full_update = update;
     }
 
-    // New member functions
-    virtual bool updateSSLagrangian(const vector_fp& solutionRef) const {}
-
 protected:
     doublereal m_rdt;
     size_t m_nv;

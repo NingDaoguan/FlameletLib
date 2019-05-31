@@ -226,17 +226,16 @@ int Sim1D::newtonSolve(int loglevel)
 
 void Sim1D::solve(int loglevel, bool refine_grid)
 {
-    // update Lagrangian
-    size_t Lagr_cnt = 0;
-    while (true)
+    bool convergence = false;
+    while (!convergence)
     {
-        std::cout << "\nLagrangian loop # " << Lagr_cnt << std::endl;
-        
-        vector_fp& solutionRef = m_x;
-        Domain1D& domLagr = domain(1);
-        bool Lagr_ok = domLagr.updateSSLagrangian(solutionRef);
-        if (Lagr_ok == true) break;
-        
+        std::cout << "Lagrangian loop\t:\t" << cloud_->loopcnt() << std::endl;
+        cloud_->setupFlowField(m_x);
+        convergence = cloud_->solve();
+        cloud_->write();
+        if (convergence == true) break;
+
+
         int new_points = 1;
         doublereal dt = m_tstep;
         m_nsteps = 0;
@@ -257,6 +256,7 @@ void Sim1D::solve(int loglevel, bool refine_grid)
                 newton().setOptions(m_ss_jac_age);
                 debuglog("Attempt Newton solution of steady-state problem...", loglevel);
                 int status = newtonSolve(loglevel-1);
+
                 if (status == 0) {
                     if (loglevel > 0) {
                         writelog("    success.\n\n");
@@ -306,7 +306,7 @@ void Sim1D::solve(int loglevel, bool refine_grid)
                         saveResidual("debug_sim1d.xml", "residual",
                                      "After timestepping");
                     }
-                    
+
                     if (loglevel == 1) {
                         writelog(" {:10.4g} {:10.4g}\n", dt,
                                  log10(ssnorm(m_x.data(), m_xnew.data())));
@@ -346,9 +346,9 @@ void Sim1D::solve(int loglevel, bool refine_grid)
                 new_points = 0;
             }
         }
-        Lagr_cnt++;
+
     }
-    std::cout << "\nEnd\n" << std::endl;
+
 }
 
 int Sim1D::refine(int loglevel)
