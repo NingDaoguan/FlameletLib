@@ -20,7 +20,8 @@ class Lagrangian
 public:
     Lagrangian( const doublereal diameterInjection = 50e-6,
                 const doublereal mdotInjection = 0.0,
-                const doublereal TInjection = 300.0 );
+                const doublereal TInjection = 300.0,
+                const doublereal p0 = 101325.0 );
     Lagrangian() = default;
 
     void flow(StFlow& flow) {
@@ -53,7 +54,7 @@ public:
 private:
 
     // member functions
-    void resize() {
+    void clear() {
         // clear flow field
         z_.clear();
         rho_.clear();
@@ -80,6 +81,14 @@ private:
         tp_.clear();
         tt_.clear();
         td_.clear();
+
+        // clear transfer fields
+        utf_.clear();
+        htf_.clear();
+        mtf_.resize(fuelName_.size());
+        for (size_t i=0; i<mtf_.size(); i++) {
+            mtf_[i].clear();
+        }
     }
 
 
@@ -98,6 +107,8 @@ private:
     }
 
     void calcTrans(int ip);
+
+    void evalTrans();
 
     doublereal linearInterpolate(const vector_fp& field, const doublereal z) const;
 
@@ -157,6 +168,12 @@ private:
     vector_fp tp_;
     vector_fp td_;
     vector_fp tt_;
+
+
+    // transfer fields
+    vector_fp utf_;
+    vector_fp htf_;
+    std::vector<std::vector<doublereal> > mtf_;
 
     // loop
     int loopcnt_;

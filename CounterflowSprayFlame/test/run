@@ -1,0 +1,5 @@
+#!/bin/sh
+cd ..
+scons
+cd test
+counterflowSprayFlame 1 1 1

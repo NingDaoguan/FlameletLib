@@ -7,13 +7,14 @@ namespace Cantera
 
 Lagrangian::Lagrangian( const doublereal diameterInjection,
                         const doublereal mdotInjection,
-                        const doublereal TInjection ) :
+                        const doublereal TInjection,
+                        const doublereal p0 ) :
     diameterInjection_(diameterInjection),
     mdotInjection_(mdotInjection),
     TInjection_(TInjection),
     dt_(2e-5),
     small(1.0e-10),
-    p0_(101325.0),
+    p0_(p0),
     flow_(0),
     loopcnt_(0)
 {
@@ -23,7 +24,7 @@ Lagrangian::Lagrangian( const doublereal diameterInjection,
 
 void Lagrangian::setupFlowField(const vector_fp& solution)
 {
-    this->resize();
+    this->clear();
     z_ = flow_->grid();
     rho_ = flow_->density();
     mu_ = flow_->viscosity();
@@ -59,7 +60,9 @@ void Lagrangian::setupFlowField(const vector_fp& solution)
 doublereal Lagrangian::linearInterpolate(const vector_fp& field, const doublereal z) const
 {
     const size_t zSize = z_.size();
-    if (field.size() != zSize) std::cerr << "LINEAR INTERPOLATE ERROR: UNEQUAL SIZE" << std::endl;
+    if (field.size() != zSize) {
+        std::cerr << "LINEAR INTERPOLATE ERROR: UNEQUAL SIZE" << std::endl;
+    }
     size_t leftIndex=0;
     size_t rightIndex=0;
     doublereal leftLength=0.0;
@@ -81,7 +84,8 @@ doublereal Lagrangian::linearInterpolate(const vector_fp& field, const doublerea
                 break;
             }
         }
-        return field[leftIndex]*rightLength/sumLength + field[rightIndex]*leftLength/sumLength;
+        return  field[leftIndex]*rightLength/sumLength
+                + field[rightIndex]*leftLength/sumLength;
     }
 }
 
@@ -123,16 +127,17 @@ void Lagrangian::calcTrans(int ip)
     for (int j=0; j<50; j++) {
         doublereal mdotDash = mdot;
         beta = 1.5*Pr*taud * (mdot/md);
-        const doublereal Xs = (101325.0/p0_) * std::exp( (latentHeat(oldT)/(8.314/W_V) )
-                            * (1/T_B - 1/oldT) );
+        const doublereal Xs = (101325.0/p0_)
+                            * std::exp( (latentHeat(oldT)/(8.314/W_V) )
+                            * (1.0/T_B - 1.0/oldT) );
         const doublereal Lk = muGas * std::sqrt(2.0*Pi*oldT*8.314/W_V) / (Sc*p0_);
         const doublereal Xsneq = Xs - 2.0*Lk*beta/oldD;
         doublereal Ysneq = Xsneq / ( Xsneq + (1.0 - Xsneq)*W_C/W_V );
         Ysneq = (Ysneq < 0.99999 ? Ysneq : 0.99999);
         doublereal B = (Ysneq - YGas[0]) / (1.0 - Ysneq); // single-component
-        B = (B > 0 ? B : 0);
+        B = (B > -1.0 ? B : -0.99999);
         mdot = Sh/(3.0*Sc) * (md/taud) * std::log(1.0 + B);
-        if (std::abs(mdot - mdotDash)/std::max(small, mdotDash) < 1e-4) break;
+        if (std::abs(mdot - mdotDash)/std::max(small, mdotDash) < 1.0e-4) break;
     }
     beta = beta > small ? beta : small;
     doublereal mtc = (( beta / (std::exp(beta) - 1.0) ) / taud) * (cpGas / cpd(oldT));
@@ -180,12 +185,11 @@ void Lagrangian::calcTrans(int ip)
         doublereal F = 0.5*Cd*rhoGas*(uGas-oldV)*std::abs(uGas-oldV)*Pi*dm*dm/4.0;
         velocity_[ip] += F*dt_/mm;
         position_[ip] = 0.5*(oldV + velocity_[ip])*dt_ + oldP;
-        uTrans_[ip] = -F;
     }
     else {
+        position_[ip] = -1.0;
         diameter_[ip] = 0.0;
         velocity_[ip] = 0.0;
-        uTrans_[ip] = 0.0;
     }
 }
 
@@ -211,22 +215,124 @@ bool Lagrangian::solve()
         }
     }
 
+    this->evalTrans();
 
 
     return false;
 }
 
 
+void Lagrangian::evalTrans()
+{
+    // resize to grid size
+    htf_.resize(z_.size(), 0.0);
+    for (size_t i=0; i<mtf_.size(); i++) {
+        mtf_[i].resize(z_.size(), 0.0);
+    }
+
+    doublereal leftz;
+    doublereal rightz;
+    doublereal leftLength;
+    doublereal rightLength;
+    doublereal dz;
+    doublereal sumH = 0.0;
+    vector_fp sumM(fuelName_.size(), 0.0);
+
+    // left-most point
+    rightz = z_[1];
+    // find
+    sumH = 0.0;
+    for (size_t is=0; is<sumM.size(); is++) sumM[is] = 0;
+    for (size_t ip=0; ip<position_.size(); ip++) {
+        dz = rightz - z_[0];
+        if (position_[ip]>z_[0] && position_[ip]<=rightz) {
+            rightLength = rightz - position_[ip];
+            sumH += (rightLength/dz) * hTrans_[ip];
+            for (int i=0;i<fuelName_.size();i++) {
+                sumM[i] += (rightLength/dz) * mTrans_[i][ip];
+            }
+        }
+    }
+    dz = rightz - z_[0];
+    htf_[0] = sumH/(0.5*dz);
+    for (size_t i=0; i<mtf_.size(); i++) {
+        mtf_[i][0] = sumM[i]/(0.5*dz);
+    }
+
+    // interior points
+    for (size_t iz=1; iz<z_.size()-1; iz++) {
+        leftz = z_[iz-1];
+        rightz = z_[iz+1];
+        // find
+        sumH = 0.0;
+        for (size_t is=0; is<sumM.size(); is++) sumM[is] = 0;
+        for (size_t ip=0; ip<position_.size(); ip++) {
+            dz = z_[iz] - leftz;
+            if (position_[ip]>leftz && position_[ip]<=z_[iz]) {
+                leftLength = position_[ip] - leftz;
+                sumH += (leftLength/dz) * hTrans_[ip];
+                for (size_t i=0; i<fuelName_.size(); i++) {
+                    sumM[i] += (leftLength/dz) * mTrans_[i][ip];
+                }
+            }
+
+            dz = rightz - z_[iz];
+            if (position_[ip]>z_[iz] && position_[ip]<=rightz) {
+                rightLength = rightz - position_[ip];
+                sumH += (rightLength/dz) * hTrans_[ip];
+                for (int i=0;i<fuelName_.size();i++) {
+                    sumM[i] += (rightLength/dz) * mTrans_[i][ip];
+                }
+            }
+        }
+        dz = rightz - leftz;
+        htf_[iz] = sumH/(0.5*dz);
+        for (size_t i=0; i<mtf_.size(); i++) {
+            mtf_[i][iz] = sumM[i]/(0.5*dz);
+        }
+    }
+
+    // right-most point
+    leftz = z_[z_.size()-2];
+    // find
+    sumH = 0.0;
+    for (size_t is=0; is<sumM.size(); is++) sumM[is] = 0;
+    for (size_t ip=0; ip<position_.size(); ip++) {
+        dz = z_[z_.size()-1] - leftz;
+        if (position_[ip]>leftz && position_[ip]<=z_[z_.size()-1]) {
+            leftLength = position_[ip] - leftz;
+            sumH += (leftLength/dz) * hTrans_[ip];
+            for (int i=0;i<fuelName_.size();i++) {
+                sumM[i] += (leftLength/dz) * mTrans_[i][ip];
+            }
+        }
+    }
+    dz = z_[z_.size()-1] - leftz;
+    htf_[z_.size()-1] = sumH/(0.5*dz);
+    for (size_t i=0; i<mtf_.size(); i++) {
+        mtf_[i][z_.size()-1] = sumM[i]/(0.5*dz);
+    }
+
+}
+
+
 void Lagrangian::write() const
 {
-    std::ofstream fout(outfile_);
-    fout<< "# Time (s), Position (m), Temperature (K), Diameter (m)" << std::endl;
-    for (size_t it=0; it<tp_.size(); it++)
-    {
-        fout<< it*dt_ << ","
-            << tp_[it] << ","
-            << tt_[it] << ","
-            << td_[it] << std::endl;
+    std::ofstream fout1(outfile_);
+    fout1 << "# Time (s), Position (m), Temperature (K), Diameter (m)" << std::endl;
+    for (size_t it=0; it<tp_.size(); it++) {
+        fout1 << it*dt_ << ","
+              << tp_[it] << ","
+              << tt_[it] << ","
+              << td_[it] << std::endl;
+    }
+
+    std::ofstream fout2("trans" + outfile_);
+    fout2 << "# z (m), hTrans (J/m^3/s), mTrans (kg/m^3/s)" << std::endl;
+    for (size_t iz=0; iz<z_.size(); iz++) {
+        fout2 << z_[iz] << ","
+              << htf_[iz] << ","
+              << mtf_[0][iz] << std::endl;
     }
 }
 
