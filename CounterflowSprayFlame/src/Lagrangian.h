@@ -30,6 +30,10 @@ public:
 
     void setupFlowField(const vector_fp& solution);
 
+    void setRelaxation(const doublereal& rlxf) {
+        rlxf_ = rlxf;
+    }
+
     int loopcnt() const {
         return loopcnt_;
     }
@@ -41,6 +45,10 @@ public:
         T_B = 352.0;
     }
 
+    std::vector<std::string> fuelName() const {
+        return fuelName_;
+    }
+
     bool solve();
 
     void write() const;
@@ -50,47 +58,25 @@ public:
     }
 
 
+    // access
+    doublereal htr(const doublereal z) const {
+        return  linearInterpolate(htf_, z);
+    }
+
+    doublereal mtr(const size_t i, const doublereal z) const {
+        return linearInterpolate(mtf_[i], z);
+    }
+
+    doublereal tmtr(const doublereal z) const {
+
+    }
+
+
 
 private:
 
     // member functions
-    void clear() {
-        // clear flow field
-        z_.clear();
-        rho_.clear();
-        mu_.clear();
-        u_.clear();
-        T_.clear();
-        Y_.resize(fuelName_.size());
-        for (size_t i=0; i<Y_.size(); i++) {
-            Y_[i].clear();
-        }
-        // clear parcels
-        position_.clear();
-        velocity_.clear();
-        diameter_.clear();
-        temperature_.clear();
-        uTrans_.clear();
-        hTrans_.clear();
-        mTrans_.resize(fuelName_.size());
-        for (size_t i=0; i<mTrans_.size(); i++) {
-            mTrans_[i].clear();
-        }
-
-        // clear tracking data
-        tp_.clear();
-        tt_.clear();
-        td_.clear();
-
-        // clear transfer fields
-        utf_.clear();
-        htf_.clear();
-        mtf_.resize(fuelName_.size());
-        for (size_t i=0; i<mtf_.size(); i++) {
-            mtf_[i].clear();
-        }
-    }
-
+    void clear();
 
     void inject() {
         position_.push_back(z_[0]);
@@ -98,19 +84,47 @@ private:
         diameter_.push_back(diameterInjection_);
         temperature_.push_back(TInjection_);
 
-        uTrans_.push_back(0.0);
         hTrans_.push_back(0.0);
         for (size_t i=0; i<mTrans_.size(); i++) {
             mTrans_[i].push_back(0.0);
         }
+    }
 
+    void track() {
+        tp_.push_back(position_[0]);
+        td_.push_back(diameter_[0]);
+        tt_.push_back(temperature_[0]);
+        tv_.push_back(velocity_[0]);
     }
 
     void calcTrans(int ip);
 
     void evalTrans();
 
-    doublereal linearInterpolate(const vector_fp& field, const doublereal z) const;
+    void evalRsd();
+
+    void relax();
+
+    void relax(vector_fp& field1, const vector_fp& field0) {
+        for (size_t i=0; i<field1.size(); i++) {
+            field1[i] = rlxf_*field1[i]
+                        + (1 - rlxf_)*linearInterpolate(field0, zOld_, z_[i]);
+        }
+    }
+
+    void scale(vector_fp& field, const doublereal fc) {
+        for (auto it=field.begin(); it!=field.end(); it++) {
+            *it *= fc;
+        }
+    }
+
+    doublereal linearInterpolate(const vector_fp& field,
+                                 const doublereal z) const;
+
+    doublereal linearInterpolate(const vector_fp& field,
+                                 const vector_fp& grid,
+                                 const doublereal z) const;
+
 
     // ethanol
     doublereal rhod(doublereal T) const {
@@ -133,7 +147,9 @@ private:
     doublereal dt_;
     doublereal small;
     doublereal p0_;
+    doublereal rlxf_;
     std::string outfile_;
+    doublereal np_;
     // fuel
     std::vector<std::string> fuelName_;
     doublereal W_V;
@@ -142,7 +158,6 @@ private:
 
     // access to gas-phase
     StFlow* flow_;
-
     // gas-phase
     vector_fp z_;
     vector_fp rho_;
@@ -158,8 +173,6 @@ private:
     vector_fp velocity_;
     vector_fp diameter_;
     vector_fp temperature_;
-
-    vector_fp uTrans_;
     vector_fp hTrans_;
     std::vector<std::vector<doublereal> > mTrans_;
 
@@ -168,14 +181,20 @@ private:
     vector_fp tp_;
     vector_fp td_;
     vector_fp tt_;
+    vector_fp tv_;
 
 
     // transfer fields
-    vector_fp utf_;
     vector_fp htf_;
     std::vector<std::vector<doublereal> > mtf_;
 
+    vector_fp zOld_;
+    vector_fp htfOld_;
+    std::vector<std::vector<doublereal> > mtfOld_;
+
+
     // loop
+    doublereal rsd_;
     int loopcnt_;
 
 };

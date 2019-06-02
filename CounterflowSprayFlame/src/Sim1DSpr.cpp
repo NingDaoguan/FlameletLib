@@ -235,7 +235,6 @@ void Sim1D::solve(int loglevel, bool refine_grid)
         cloud_->write();
         if (convergence == true) break;
 
-
         int new_points = 1;
         doublereal dt = m_tstep;
         m_nsteps = 0;

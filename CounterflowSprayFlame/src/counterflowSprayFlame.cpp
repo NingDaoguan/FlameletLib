@@ -155,6 +155,7 @@ void counterflowSprayFlame(doublereal mdotL, doublereal mdotR, doublereal len)
     // cloud
     Lagrangian cloud(diameterInjection, mdotInjection, TInjection, p0);
     cloud.setFuel(fuelName);
+    cloud.setRelaxation(LagrangianRelaxationFactor);
     std::stringstream ss1;
     ss1 << "LAGml-" << mdotL << "mr-" << mdotR << "L-" << len << "_raw.csv";
     cloud.outfile(ss1.str());
