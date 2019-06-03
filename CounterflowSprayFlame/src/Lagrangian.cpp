@@ -27,7 +27,7 @@ Lagrangian::Lagrangian( const doublereal diameterInjection,
 }
 
 
-void Lagrangian::setupFlowField(const vector_fp& solution)
+bool Lagrangian::setupFlowField(const vector_fp& solution)
 {
     this->clear();
     z_ = flow_->grid();
@@ -61,6 +61,9 @@ void Lagrangian::setupFlowField(const vector_fp& solution)
         }
     }
     std::cout << std::endl;
+
+    this->evalRsd();
+    return (rsd_ < 0.0001);
 }
 
 
@@ -90,7 +93,6 @@ void Lagrangian::clear() {
     tp_.clear();
     tt_.clear();
     td_.clear();
-    tv_.clear();
 
     // clear transfer fields
     htf_.clear();
@@ -98,15 +100,21 @@ void Lagrangian::clear() {
     for (size_t i=0; i<mtf_.size(); i++) {
         mtf_[i].clear();
     }
+    tmtf_.clear();
 }
 
 
 void Lagrangian::relax() {
+    vector_fp thtf(htf_);
+    std::vector<std::vector<doublereal> > tmtf(mtf_);
+
     if (loopcnt_ == 0) {
-        this->scale(htf_, rlxf_);
+        this->scale(htf_, 0.5*rlxf_);
         for (size_t i=0; i<fuelName_.size(); i++) {
-            this->scale(mtf_[i], 0.8);
+            this->scale(mtf_[i], 1.3);
         }
+        thtf = htf_;
+        tmtf = mtf_;
     }
     else {
         this->relax(htf_, htfOld_);
@@ -114,6 +122,16 @@ void Lagrangian::relax() {
             this->relax(mtf_[i], mtfOld_[i]);
         }
     }
+
+    for (size_t i=0; i<fuelName_.size(); i++) {
+        for (size_t j=0; j<tmtf_.size(); j++) {
+            tmtf_[j] += mtf_[i][j];
+        }
+    }
+
+    zOld_ = z_;
+    htfOld_ = thtf;
+    mtfOld_ = tmtf;
 }
 
 
@@ -204,7 +222,7 @@ void Lagrangian::calcTrans(int ip)
     muGas = muGas > small ? muGas : 1.7e-5;
     doublereal cpGas = linearInterpolate(cp_, oldP);
     cpGas = cpGas > small ? cpGas : 1006.0;
-    doublereal TGas = std::max( linearInterpolate(T_,oldP), 250.0 );
+    doublereal TGas = std::max( linearInterpolate(T_,oldP), 200.0 );
     vector_fp YGas(fuelName_.size(), 0.0);
     for (size_t i=0; i<fuelName_.size(); i++) {
         YGas[i] = linearInterpolate(Y_[i], oldP);   
@@ -295,7 +313,7 @@ void Lagrangian::calcTrans(int ip)
 }
 
 
-bool Lagrangian::solve()
+void Lagrangian::solve()
 {
     for (int num=1; num<10000; num++) {
         this->inject();
@@ -317,11 +335,7 @@ bool Lagrangian::solve()
 
     this->relax();
 
-    this->evalRsd();
-
     loopcnt_++;
-
-    return (rsd_ < 0.01);
 }
 
 
@@ -332,6 +346,7 @@ void Lagrangian::evalTrans()
     for (size_t i=0; i<mtf_.size(); i++) {
         mtf_[i].resize(z_.size(), 0.0);
     }
+    tmtf_.resize(z_.size(), 0.0);
 
     doublereal leftz;
     doublereal rightz;
@@ -389,9 +404,9 @@ void Lagrangian::evalTrans()
             }
         }
         dz = rightz - leftz;
-        htf_[iz] = sumH/(0.5*dz);
+        htf_[iz] = sumH/(csArea(iz)*0.5*dz);
         for (size_t i=0; i<mtf_.size(); i++) {
-            mtf_[i][iz] = sumM[i]/(0.5*dz);
+            mtf_[i][iz] = sumM[i]/(csArea(iz)*0.5*dz);
         }
     }
 
@@ -436,36 +451,50 @@ void Lagrangian::evalRsd()
     else {
         doublereal sum1 = 0.0;
         doublereal sum2 = 0.0;
-        for (size_t i=0; i<fuelName_.size(); i++) {
-            for (size_t j=0; j<mtf_[i].size(); j++) {
-                sum1 += ( mtf_[i][j] - linearInterpolate(mtfOld_[i], zOld_, z_[j]) )
-                      * ( mtf_[i][j] - linearInterpolate(mtfOld_[i], zOld_, z_[j]) );
-                sum2 += linearInterpolate(mtfOld_[i], zOld_, z_[j])
-                      * linearInterpolate(mtfOld_[i], zOld_, z_[j]);
-            }
+        for (size_t j=0; j<T_.size(); j++) {
+            sum1 += ( T_[j] - linearInterpolate(TOld_, zOld_, z_[j]) )
+                  * ( T_[j] - linearInterpolate(TOld_, zOld_, z_[j]) );
+            sum2 += linearInterpolate(TOld_, zOld_, z_[j])
+                  * linearInterpolate(TOld_, zOld_, z_[j]);
         }
         sum1 /= z_.size()*fuelName_.size();
         sum2 /= z_.size()*fuelName_.size();
         rsd_ = std::sqrt(sum1) / std::sqrt(sum2 + small);
     }
-    std::cout << "RMS Residual\t:\t" << rsd_ << std::endl;
+    std::cout << "T RMS Residual\t:\t" << rsd_ << std::endl;
 
-    zOld_ = z_;
-    htfOld_ = htf_;
-    mtfOld_ = mtf_;
+    TOld_ = T_;
+}
+
+
+doublereal Lagrangian::csArea(size_t iz) const {
+    doublereal rho1;
+    doublereal u1;
+    doublereal rho2 = rho_[iz] > small ? rho_[iz] : 1.1;
+    doublereal u2 = u_[iz];
+    u2 = (std::abs(u2) > small ? u2 : small);
+
+    if (u2 >=0 ) {
+        rho1 = rho_[0] > small ? rho_[0] : 1.1;
+        u1 = u_[0];
+    }
+    else {
+        rho1 = rho_[z_.size()-1] > small ? rho_[z_.size()-1] : 1.1;
+        u1 = u_[z_.size()-1];
+    }
+    return (rho1*u1) / (rho2*u2);
 }
 
 
 void Lagrangian::write() const
 {
     std::ofstream fout1(outfile_);
-    fout1 << "# t (s), z (m), T (K), D (m), ud (m/s)" << std::endl;
+    fout1 << "# t (s), z (m), T (K), D (m)" << std::endl;
     for (size_t it=0; it<tp_.size(); it++) {
         fout1 << it*dt_ << ","
               << tp_[it] << ","
               << tt_[it] << ","
-              << td_[it] << ","
-              << tv_[it] << std::endl;
+              << td_[it] << std::endl;
     }
 
     std::ofstream fout2("trans" + outfile_);

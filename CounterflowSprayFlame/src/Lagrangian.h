@@ -28,7 +28,7 @@ public:
         flow_ = &flow;
     }
 
-    void setupFlowField(const vector_fp& solution);
+    bool setupFlowField(const vector_fp& solution);
 
     void setRelaxation(const doublereal& rlxf) {
         rlxf_ = rlxf;
@@ -49,7 +49,7 @@ public:
         return fuelName_;
     }
 
-    bool solve();
+    void solve();
 
     void write() const;
 
@@ -68,7 +68,7 @@ public:
     }
 
     doublereal tmtr(const doublereal z) const {
-
+        return  linearInterpolate(tmtf_, z);
     }
 
 
@@ -94,7 +94,6 @@ private:
         tp_.push_back(position_[0]);
         td_.push_back(diameter_[0]);
         tt_.push_back(temperature_[0]);
-        tv_.push_back(velocity_[0]);
     }
 
     void calcTrans(int ip);
@@ -117,6 +116,8 @@ private:
             *it *= fc;
         }
     }
+
+    doublereal csArea(size_t iz) const;
 
     doublereal linearInterpolate(const vector_fp& field,
                                  const doublereal z) const;
@@ -181,14 +182,16 @@ private:
     vector_fp tp_;
     vector_fp td_;
     vector_fp tt_;
-    vector_fp tv_;
 
 
     // transfer fields
     vector_fp htf_;
     std::vector<std::vector<doublereal> > mtf_;
+    vector_fp tmtf_;
 
+    // old fields
     vector_fp zOld_;
+    vector_fp TOld_;
     vector_fp htfOld_;
     std::vector<std::vector<doublereal> > mtfOld_;
 

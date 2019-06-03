@@ -230,10 +230,10 @@ void Sim1D::solve(int loglevel, bool refine_grid)
     while (!convergence)
     {
         std::cout << "Lagrangian loop\t:\t" << cloud_->loopcnt() << std::endl;
-        cloud_->setupFlowField(m_x);
-        convergence = cloud_->solve();
-        cloud_->write();
+        convergence = cloud_->setupFlowField(m_x);
         if (convergence == true) break;
+        cloud_->solve();
+        cloud_->write();
 
         int new_points = 1;
         doublereal dt = m_tstep;

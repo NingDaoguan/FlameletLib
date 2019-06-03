@@ -436,17 +436,17 @@ void StFlow::evalResidual(double* x, double* rsd, int* diag,
                    - convec - diffus)/m_rho[j]
                   - rdt*(Y(x,k,j) - Y_prev(k,j));
 
-                // // evaporation from Lagrangian particle cloud
-                // // multi-component evaporation
-                // rsd[index(c_offset_Y + k, j)] += ( -cloud_->tmtr(z(j))
-                //                                * Y(x,k,j) ) / m_rho[j];
-                // for (size_t ik=0; ik<cloud_->fuelName_().size(); ik++) {
-                //     if (m_thermo->speciesName(k) == cloud_->fuelName_()[ik]) {
-                //         rsd[index(c_offset_Y + k, j)] += ( cloud_->mtr(ik, z(j))) / m_rho[j];
-                //         break;
-                //     }
-                //     else continue;
-                // }
+                // evaporation from Lagrangian particle cloud
+                // multi-component evaporation
+                rsd[index(c_offset_Y + k, j)] += ( -cloud_->tmtr(z(j))
+                                               * Y(x,k,j) ) / m_rho[j];
+                for (size_t ik=0; ik<cloud_->fuelName().size(); ik++) {
+                    if (m_thermo->speciesName(k) == cloud_->fuelName()[ik]) {
+                        rsd[index(c_offset_Y + k, j)] += ( cloud_->mtr(ik, z(j))) / m_rho[j];
+                        break;
+                    }
+                    else continue;
+                }
 
                 diag[index(c_offset_Y + k, j)] = 1;
             }
@@ -970,7 +970,7 @@ void StFlow::evalContinuity(size_t j, double* x, double* rsd, int* diag, double 
             -(density(j+1)*V(x,j+1) + density(j)*V(x,j));
 
         // // continuity source from Lagrangian particle cloud
-        // rsd[index(c_offset_U,j)] += cloud_->tmtr( z(j) );
+        rsd[index(c_offset_U,j)] += cloud_->tmtr( z(j) );
 
     } else if (domainType() == cFreeFlow) {
         if (grid(j) > m_zfixed) {
