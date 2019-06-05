@@ -2,4 +2,4 @@
 cd ..
 scons
 cd test
-counterflowSprayFlame 1.1768 1.1768 0.02
+counterflowSprayFlame 1 1 0.02

@@ -64,11 +64,11 @@ public:
     }
 
     doublereal mtr(const size_t i, const doublereal z) const {
-        return linearInterpolate(mtf_[i], z);
+        return std::max(linearInterpolate(mtf_[i], z), small);
     }
 
     doublereal tmtr(const doublereal z) const {
-        return  linearInterpolate(tmtf_, z);
+        return  std::max(linearInterpolate(tmtf_, z), small);
     }
 
 

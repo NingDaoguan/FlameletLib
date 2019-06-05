@@ -111,7 +111,7 @@ void Lagrangian::relax() {
     if (loopcnt_ == 0) {
         this->scale(htf_, 0.5*rlxf_);
         for (size_t i=0; i<fuelName_.size(); i++) {
-            this->scale(mtf_[i], 1.3);
+            this->scale(mtf_[i], 1.2);
         }
         thtf = htf_;
         tmtf = mtf_;
@@ -254,7 +254,7 @@ void Lagrangian::calcTrans(int ip)
         doublereal Ysneq = Xsneq / ( Xsneq + (1.0 - Xsneq)*W_C/W_V );
         Ysneq = (Ysneq < 0.99999 ? Ysneq : 0.99999);
         doublereal B = (Ysneq - YGas[0]) / (1.0 - Ysneq); // single-component
-        B = (B > -1.0 ? B : -0.99999);
+        B = (B > 0.0 ? B : 0.0);
         mdot = Sh/(3.0*Sc) * (md/taud) * std::log(1.0 + B);
         if (std::abs(mdot - mdotDash)/std::max(small, mdotDash) < 1.0e-4) break;
     }
