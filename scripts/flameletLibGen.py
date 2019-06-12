@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 
 p = 101325.0
 
-data_directory = 'tables/'
+data_directory = 'ytables/'
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
@@ -60,8 +60,10 @@ for i in range(len(names)):
         ARIndex = i
         continue
 
-ax1 = plt.subplot(121)
-ax2 = plt.subplot(122)
+ax1 = plt.subplot(221)
+ax2 = plt.subplot(222)
+ax3 = plt.subplot(223)
+ax4 = plt.subplot(224)
 for n in range(0,numLoop+1,1):
     if n == 0:
         filename = 'initial_solution.csv'
@@ -91,9 +93,11 @@ for n in range(0,numLoop+1,1):
     # Calculate omegaYc
     Y = []
     omegaYc = np.zeros(len(Yc))
+    ha = np.zeros(len(Yc))
     for i in range(len(Yc)):
         Y = data1orig[i][speciesStart::]
         gas.TPY = (T[i], p, Y)
+        ha[i] = gas.enthalpy_mass
         # omegaYc[i] = gas.net_production_rates[COIndex - speciesStart] * molW[COIndex - speciesStart] \
         #             +gas.net_production_rates[H2Index - speciesStart] * molW[H2Index - speciesStart] \
         #             +gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
@@ -105,8 +109,10 @@ for n in range(0,numLoop+1,1):
     data2.append(list(Z))
     data2.append(list(Yc))
     data2.append(list(omegaYc))
-    ax1.plot(Z,Yc)
-    ax2.plot(Z,omegaYc)
+    ax1.plot(Z,T)
+    ax2.plot(Z,ha)
+    ax3.plot(Z,Yc)
+    ax4.plot(Z,omegaYc)
     data2.append(list(T))
     for i in range(len(data1)):
         if i >= speciesStart:
@@ -115,11 +121,11 @@ for n in range(0,numLoop+1,1):
             pass
     data2 = np.array(data2)
     data2 = np.transpose(data2)
-    if Z[0] > 0.99:
+    if Z[0] > 0.2:
         data2 = data2[::-1]
     else:
         pass
     with open(filename2,'a') as f:
         np.savetxt(f, data2, delimiter=',',fmt='%f')
+plt.savefig('ytables.png',dpi=500)
 
-plt.show()

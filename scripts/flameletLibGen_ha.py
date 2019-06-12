@@ -4,10 +4,9 @@ import cantera as ct
 import numpy as np
 import matplotlib.pyplot as plt
 
-p = 101300.0
-Tstd = 298.15
+p = 101325.0
 
-data_directory = 'hstables/'
+data_directory = 'hatables/'
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
@@ -73,7 +72,7 @@ for n in range(0,numLoop+1,1):
 
     filename2 = data_directory + 'flameletTable_{:}.csv'.format(n)
     with open(filename2, 'w+') as fo:
-        line = 'Z,Yc,omegaYc,T'
+        line = 'Z,ha,Yc,omegaYc,T'
         for i in speciesNames:
             line += f',{i}'
         fo.write(line+'\n')
@@ -84,6 +83,8 @@ for n in range(0,numLoop+1,1):
     YAR = data1[ARIndex]
     YARO = max(YAR[-1], YAR[0])
     Z = (YAR - YARO) / (0.0-YARO)
+    # Yc = data1[H2OIndex] + data1[H2Index] + data1[CO2Index] + data1[COIndex]
+    Yc = data1[H2OIndex] + data1[CO2Index]
 
     for i in range(len(data1)):
         if names[i] == speciesNames[0]:
@@ -91,22 +92,19 @@ for n in range(0,numLoop+1,1):
 
     # Calculate omegaYc
     Y = []
-    omegaYc = np.zeros(len(Z))
-    Yc = np.zeros(len(Z))
-    ha = np.zeros(len(Z))
-    for i in range(len(Z)):
+    ha = np.zeros(len(Yc))
+    omegaYc = np.zeros(len(Yc))
+    for i in range(len(Yc)):
         Y = data1orig[i][speciesStart::]
         gas.TPY = (T[i], p, Y)
-        npr = gas.net_production_rates
         ha[i] = gas.enthalpy_mass
-        Yc[i] = gas.enthalpy_mass
+        omegaYc[i] = gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
+                    +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
 
-        gas.TPY = (Tstd, p, Y)
-        Yc[i] -= gas.enthalpy_mass
-        omegaYc[i] = -np.dot(npr, gas.partial_molar_enthalpies)
 
     data2 = []
     data2.append(list(Z))
+    data2.append(list(ha))
     data2.append(list(Yc))
     data2.append(list(omegaYc))
     ax1.plot(Z,T)
@@ -127,5 +125,5 @@ for n in range(0,numLoop+1,1):
         pass
     with open(filename2,'a') as f:
         np.savetxt(f, data2, delimiter=',',fmt='%f')
-plt.savefig('hstables.png',dpi=500)
-plt.show()
+plt.savefig('hatables.png',dpi=500)
+

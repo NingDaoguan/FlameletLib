@@ -4,12 +4,14 @@ import cantera as ct
 import numpy as np
 import matplotlib.pyplot as plt
 
-p = 101300.0
-Tstd = 298.15
+p = 101325.0
 
-data_directory = 'hstables/'
-if not os.path.exists(data_directory):
-    os.makedirs(data_directory)
+data_directory_orig = 'hatables/ha_1'
+if not os.path.exists(data_directory_orig):
+    os.makedirs(data_directory_orig)
+data_directory_low = 'hatables/ha_0'
+if not os.path.exists(data_directory_low):
+    os.makedirs(data_directory_low)
 
 numLoop = int( input('Enter loop numer\n> ') )
 fuelType = input('1:\tJet-A\n2:\tnc12h26\n3:\tC2H5OH\n> ')
@@ -71,9 +73,12 @@ for n in range(0,numLoop+1,1):
     else:
         filename = 'strain_loop_{0:02d}.csv'.format(n)
 
-    filename2 = data_directory + 'flameletTable_{:}.csv'.format(n)
-    with open(filename2, 'w+') as fo:
-        line = 'Z,Yc,omegaYc,T'
+    filename_orig = data_directory_orig + 'flameletTable_{:}.csv'.format(n)
+    filename_low = data_directory_low + 'flameletTable_{:}.csv'.format(n)
+
+
+    with open(filename_orig, 'w+') as fo:
+        line = 'Z,ha,Yc,omegaYc,T'
         for i in speciesNames:
             line += f',{i}'
         fo.write(line+'\n')
@@ -84,6 +89,8 @@ for n in range(0,numLoop+1,1):
     YAR = data1[ARIndex]
     YARO = max(YAR[-1], YAR[0])
     Z = (YAR - YARO) / (0.0-YARO)
+    # Yc = data1[H2OIndex] + data1[H2Index] + data1[CO2Index] + data1[COIndex]
+    Yc = data1[H2OIndex] + data1[CO2Index]
 
     for i in range(len(data1)):
         if names[i] == speciesNames[0]:
@@ -91,22 +98,50 @@ for n in range(0,numLoop+1,1):
 
     # Calculate omegaYc
     Y = []
-    omegaYc = np.zeros(len(Z))
-    Yc = np.zeros(len(Z))
-    ha = np.zeros(len(Z))
-    for i in range(len(Z)):
+    ha = np.zeros(len(Yc))
+    omegaYc = np.zeros(len(Yc))
+    for i in range(len(Yc)):
         Y = data1orig[i][speciesStart::]
         gas.TPY = (T[i], p, Y)
-        npr = gas.net_production_rates
         ha[i] = gas.enthalpy_mass
-        Yc[i] = gas.enthalpy_mass
-
-        gas.TPY = (Tstd, p, Y)
-        Yc[i] -= gas.enthalpy_mass
-        omegaYc[i] = -np.dot(npr, gas.partial_molar_enthalpies)
+        omegaYc[i] = gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
+                    +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
 
     data2 = []
     data2.append(list(Z))
+    data2.append(list(ha))
+    data2.append(list(Yc))
+    data2.append(list(omegaYc))
+    # ax1.plot(Z,T)
+    # ax2.plot(Z,ha)
+    # ax3.plot(Z,Yc)
+    # ax4.plot(Z,omegaYc)
+    data2.append(list(T))
+    for i in range(len(data1)):
+        if i >= speciesStart:
+            data2.append(list(data1[i]))
+        else:
+            pass
+    data2 = np.array(data2)
+    data2 = np.transpose(data2)
+    if Z[0] > 0.2:
+        data2 = data2[::-1]
+    else:
+        pass
+    with open(filename_orig,'a') as f:
+        np.savetxt(f, data2, delimiter=',',fmt='%f')
+
+
+    # low ha tables
+    with open(filename_low, 'w+') as fo:
+        line = 'Z,ha,Yc,omegaYc,T'
+        for i in speciesNames:
+            line += f',{i}'
+        fo.write(line+'\n')
+
+    data2 = []
+    data2.append(list(Z))
+    data2.append(list(ha))
     data2.append(list(Yc))
     data2.append(list(omegaYc))
     ax1.plot(Z,T)
@@ -125,7 +160,8 @@ for n in range(0,numLoop+1,1):
         data2 = data2[::-1]
     else:
         pass
-    with open(filename2,'a') as f:
+    with open(filename_orig,'a') as f:
         np.savetxt(f, data2, delimiter=',',fmt='%f')
-plt.savefig('hstables.png',dpi=500)
-plt.show()
+
+plt.savefig('hatables.png',dpi=500)
+

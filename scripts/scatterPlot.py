@@ -35,8 +35,10 @@ for ic,filename1 in enumerate(filename):
         norm = matplotlib.colors.Normalize(vmin=300, vmax=2300)
         sc = plt.scatter(Z1,Yc,c=data1[3],cmap=plt.cm.rainbow,s=2,norm=norm)
     elif y == '1':
+        #v = [0.0,0.5e9,1e9,1.5e9,2e9,2.5e9]
+        #norm = matplotlib.colors.Normalize(vmin=0, vmax=2.2e9)
         v = [0,50,100,150,200,250]
-        norm = matplotlib.colors.Normalize(vmin=0, vmax=260)
+        norm = matplotlib.colors.Normalize(vmin=0, vmax=250)
         sc = plt.scatter(Z1,Yc,c=data1[2],cmap=plt.cm.rainbow,s=2,norm=norm)
 
 cbar = plt.colorbar(sc,ticks=v)
@@ -48,7 +50,7 @@ else:
     print("Input Error")
 for t in cbar.ax.get_yticklabels():
     t.set_fontsize(fonts2)
-plt.xlim(0,1)
+# plt.xlim(0,1)
 # plt.ylim(0,0.5)
 plt.tick_params(labelsize=fonts2)
 plt.xlabel(r'Z (-)',fontsize=fonts2)

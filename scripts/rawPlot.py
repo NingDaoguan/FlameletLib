@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib
 
-Dz0 = 0.2e-4 # Diffusion coefficient of Z @ 273K
+#Dz0 = 0.2e-4 # Diffusion coefficient of Z @ 273K
 p0 = 101325.0 # Ambient pressure
 figs = (13,10)
 fonts1 = 23
@@ -169,7 +169,7 @@ plt.tick_params(labelsize=fonts1)
 plt.xlabel(r'Z (-)',fontsize=fonts1)
 plt.ylabel(r'T (K)',fontsize=fonts1)
 
-
+'''
 # Plot Z-Chi:T
 plt.figure(figsize=figs)
 for i,file in enumerate(filename):
@@ -204,7 +204,7 @@ plt.tick_params(labelsize=fonts1)
 plt.xlabel(r'$Z \ (-)$',fontsize=fonts1)
 plt.ylabel(r'$\chi \ (1/s)$',fontsize=fonts1)
 # plt.savefig('Z-T.png', dpi=500,bbox_inches='tight')
-
+'''
 
 # Plot Z-Yc:T
 plt.figure(figsize=figs)
@@ -221,7 +221,8 @@ for i,file in enumerate(filename):
         YIN_O = max(YIN[-1], YIN[0])
     YIN_F = 0
     Z = (YIN - YIN_O)/(YIN_F - YIN_O)
-    Yc = data[COIndex] + data[H2Index] + data[CO2Index] + data[H2OIndex]
+    #Yc = data[COIndex] + data[H2Index] + data[CO2Index] + data[H2OIndex]
+    Yc = data[CO2Index] + data[H2OIndex]
     norm = matplotlib.colors.Normalize(vmin=300, vmax=2500)
     sc = plt.scatter(Z,Yc,c=T,cmap=plt.cm.rainbow,s=20,norm=norm)
 v = [300,500,1000,1500,2000,2500]
