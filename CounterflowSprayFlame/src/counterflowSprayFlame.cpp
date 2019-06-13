@@ -241,7 +241,7 @@ void counterflowSprayFlame(doublereal mdotL, doublereal mdotR, doublereal len)
     flame.setGridMin(domFlow, minGrid);
     flow.setPressure(p0);
     flow.solveEnergyEqn();
-    flame.setRefineCriteria(domFlow,10.0,0.6,0.6,-0.1);
+    flame.setRefineCriteria(domFlow,10.0,0.3,0.3,-0.1);
     flame.solve(1,true);
 
 

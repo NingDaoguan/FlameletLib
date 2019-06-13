@@ -126,4 +126,5 @@ for n in range(0,numLoop+1,1):
     with open(filename2,'a') as f:
         np.savetxt(f, data2, delimiter=',',fmt='%f')
 plt.savefig('hatables.png',dpi=500)
+plt.show()
 

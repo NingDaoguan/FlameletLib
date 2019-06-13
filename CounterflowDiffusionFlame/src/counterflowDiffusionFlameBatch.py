@@ -103,17 +103,22 @@ elif x==6:
 elif x==7:
     reaction_mechanism = 'Ethanol_31.cti'
     gas = ct.Solution(reaction_mechanism)
-    width = 0.4 # 200mm wide
+    gas.transport_model = 'UnityLewis'
+    width = 0.4 # 400mm wide
     f = ct.CounterflowDiffusionFlame(gas, width=width)
     # Define the operating pressure and boundary conditions
-    f.P = 1.e5  # 1 bar
+    f.P = 1.0e5  # 1 bar
     f.fuel_inlet.mdot = 0.5 # kg/m^2/s
-    f.fuel_inlet.X = 'C2H5OH:1.0'
+    # f.fuel_inlet.X = 'N2:0.27078, AR:0.00347049, H2:0.251899, \
+    #                   H2O:0.0371238, CO:0.18032, CO2:0.0733696, CH4:0.183025'
+    # f.fuel_inlet.X = 'C2H5OH:2.66167, N2:3.714, AR:0.0476, CO2:0.66667, H2O:1.0'
+    # f.fuel_inlet.X = 'C2H5OH:2.995, O2:1, N2:3.714, AR:0.0476'
+    f.fuel_inlet.X = 'C2H5OH:1'
     f.fuel_inlet.T = 300.0  # K
     f.oxidizer_inlet.mdot = 0.4 # kg/m^2/s
     f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
     f.oxidizer_inlet.T = 300.0  # K
-    temperature_limit_extinction = 301.0  # K
+    temperature_limit_extinction = np.maximum(f.fuel_inlet.T, f.oxidizer_inlet.T)  # K
 elif x==8:
     reaction_mechanism = 'gri30.cti'
     gas = ct.Solution(reaction_mechanism)
@@ -132,7 +137,7 @@ else:
     print("INPUT ERR")
 
 # Set refinement parameters, if used
-f.set_refine_criteria(ratio=4.0, slope=0.3, curve=0.3, prune=0.04)
+f.set_refine_criteria(ratio=4.0, slope=0.2, curve=0.2, prune=0.04)
 
 # Define a limit for the maximum temperature below which the flame is
 # considered as extinguished and the computation is aborted

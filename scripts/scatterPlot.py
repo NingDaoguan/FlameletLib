@@ -37,8 +37,8 @@ for ic,filename1 in enumerate(filename):
     elif y == '1':
         #v = [0.0,0.5e9,1e9,1.5e9,2e9,2.5e9]
         #norm = matplotlib.colors.Normalize(vmin=0, vmax=2.2e9)
-        v = [0,50,100,150,200,250]
-        norm = matplotlib.colors.Normalize(vmin=0, vmax=250)
+        v = [0,100,200,300,350]
+        norm = matplotlib.colors.Normalize(vmin=0, vmax=350)
         sc = plt.scatter(Z1,Yc,c=data1[2],cmap=plt.cm.rainbow,s=2,norm=norm)
 
 cbar = plt.colorbar(sc,ticks=v)

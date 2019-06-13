@@ -6,10 +6,10 @@ import matplotlib.pyplot as plt
 
 p = 101325.0
 
-data_directory_orig = 'hatables/ha_1'
+data_directory_orig = 'multihatables/ha_1/'
 if not os.path.exists(data_directory_orig):
     os.makedirs(data_directory_orig)
-data_directory_low = 'hatables/ha_0'
+data_directory_low = 'multihatables/ha_0/'
 if not os.path.exists(data_directory_low):
     os.makedirs(data_directory_low)
 
@@ -132,12 +132,25 @@ for n in range(0,numLoop+1,1):
         np.savetxt(f, data2, delimiter=',',fmt='%f')
 
 
+
     # low ha tables
     with open(filename_low, 'w+') as fo:
         line = 'Z,ha,Yc,omegaYc,T'
         for i in speciesNames:
             line += f',{i}'
         fo.write(line+'\n')
+
+    T = T-200
+    # Calculate omegaYc
+    Y = []
+    ha = np.zeros(len(Z))
+    omegaYc = np.zeros(len(Z))
+    for i in range(len(Z)):
+        Y = data1orig[i][speciesStart::]
+        gas.TPY = (T[i], p, Y)
+        ha[i] = gas.enthalpy_mass
+        omegaYc[i] = gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
+                    +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
 
     data2 = []
     data2.append(list(Z))
@@ -160,8 +173,8 @@ for n in range(0,numLoop+1,1):
         data2 = data2[::-1]
     else:
         pass
-    with open(filename_orig,'a') as f:
+    with open(filename_low,'a') as f:
         np.savetxt(f, data2, delimiter=',',fmt='%f')
 
-plt.savefig('hatables.png',dpi=500)
-
+plt.savefig('multihatables.png',dpi=500)
+plt.show()

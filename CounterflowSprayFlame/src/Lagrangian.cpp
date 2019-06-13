@@ -63,7 +63,7 @@ bool Lagrangian::setupFlowField(const vector_fp& solution)
     std::cout << std::endl;
 
     this->evalRsd();
-    return (rsd_ < 0.0001);
+    return (rsd_ < 0.0002 || loopcnt_ > 100);
 }
 
 
@@ -109,9 +109,9 @@ void Lagrangian::relax() {
     std::vector<std::vector<doublereal> > tmtf(mtf_);
 
     if (loopcnt_ == 0) {
-        this->scale(htf_, 0.5*rlxf_);
+        this->scale(htf_, 0.6*rlxf_);
         for (size_t i=0; i<fuelName_.size(); i++) {
-            this->scale(mtf_[i], 1.2);
+            this->scale(mtf_[i], 1.5);
         }
         thtf = htf_;
         tmtf = mtf_;
@@ -129,7 +129,6 @@ void Lagrangian::relax() {
         }
     }
 
-    zOld_ = z_;
     htfOld_ = thtf;
     mtfOld_ = tmtf;
 }
@@ -277,9 +276,16 @@ void Lagrangian::calcTrans(int ip)
 
     // Calculate the new temperature and the enthalpy transfer
     doublereal Tnew = oldT + deltaT;
-    Tnew = std::min(Tnew, T_B);
+    Tnew = std::min(Tnew, T_B-1.0);
     temperature_[ip] = Tnew;
-    hTrans_[ip] = md*cpd(oldT)*deltaTcp / dt_;
+    hTrans_[ip] = md*cpd(oldT)*deltaTcp / dt_ + mdot*cpd(0.5*(oldT + Tnew))*(Tnew - 298.15);
+
+    // std::cout<< -md*cpd(oldT)*deltaT / dt_ + mdot*latentHeat(oldT)
+             // << " "
+             // << md*cpd(oldT)*deltaTcp / dt_ + mdot*cpd(0.5*(oldT + Tnew))*(Tnew - 298.15)
+             // << " "
+             // << md*cpd(oldT)*deltaTcp / dt_
+             // << std::endl;;
 
     if (diameter_[ip] > small) {
         // calculate force
@@ -317,7 +323,7 @@ void Lagrangian::solve()
 {
     for (int num=1; num<10000; num++) {
         this->inject();
-        if (diameter_[0] > small) {
+        if (diameter_[0]>small&&position_[0]>=z_[0]&&position_[0]<=z_[z_.size()-1]) {
             this->track();
         }
         else break;
@@ -335,6 +341,7 @@ void Lagrangian::solve()
 
     this->relax();
 
+    zOld_ = z_;
     loopcnt_++;
 }
 
@@ -467,7 +474,8 @@ void Lagrangian::evalRsd()
 }
 
 
-doublereal Lagrangian::csArea(size_t iz) const {
+doublereal Lagrangian::csArea(size_t iz) const
+{
     doublereal rho1;
     doublereal u1;
     doublereal rho2 = rho_[iz] > small ? rho_[iz] : 1.1;
@@ -477,12 +485,30 @@ doublereal Lagrangian::csArea(size_t iz) const {
     if (u2 >=0 ) {
         rho1 = rho_[0] > small ? rho_[0] : 1.1;
         u1 = u_[0];
+        doublereal mevap = sumevap(iz);
+        // std::cout << mevap << std::endl;
+        return (rho1*u1 + mevap) / (rho2*u2);
     }
     else {
         rho1 = rho_[z_.size()-1] > small ? rho_[z_.size()-1] : 1.1;
         u1 = u_[z_.size()-1];
+        return (rho1*u1) / (rho2*u2);
     }
-    return (rho1*u1) / (rho2*u2);
+}
+
+
+doublereal Lagrangian::sumevap(size_t iz) const
+{
+    doublereal sum = 0.0;
+    for (size_t ip=0; ip<position_.size(); ip++) {
+        if (position_[ip]>z_[0] && position_[ip]<=z_[iz]) {
+            for (size_t i=0; i<fuelName_.size(); i++) {
+                sum += np_*mTrans_[i][ip];
+            }
+        }
+        else continue;
+    }
+    return sum;
 }
 
 

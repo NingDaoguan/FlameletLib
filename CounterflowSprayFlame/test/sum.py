@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-data = np.loadtxt('transLAGml-1.1768mr-1.1768L-0.02_raw.csv',delimiter=',',comments='#')
+fname = input('file name:\n>')
+data = np.loadtxt(fname, delimiter=',', comments='#')
 data = np.transpose(data)
 x = data[0]
 h = data[1]

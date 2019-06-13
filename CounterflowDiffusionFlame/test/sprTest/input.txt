@@ -1,0 +1,15 @@
+kinFileName                 Ethanol_31.cti
+C_atoms                     2.0
+H_atoms                     6.0
+O_atoms                     1.0
+fuelName                    ( C2H5OH )
+fuelX                       ( 1 )
+p0                          101325.0
+compLeft                    C2H5OH:1.0
+//compLeft                    O2:0.21,N2:0.78,AR:0.01
+compRight                   O2:0.21,N2:0.78,AR:0.01
+TinLeft                     300.0
+TinRight                    300.0
+a0                          100.0
+points                      51
+ignition                    tru

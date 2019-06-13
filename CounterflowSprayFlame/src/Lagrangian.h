@@ -119,6 +119,8 @@ private:
 
     doublereal csArea(size_t iz) const;
 
+    doublereal sumevap(size_t iz) const;
+
     doublereal linearInterpolate(const vector_fp& field,
                                  const doublereal z) const;
 
