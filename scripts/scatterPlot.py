@@ -28,18 +28,18 @@ for ic,filename1 in enumerate(filename):
     YAR = data1[3]
     YARO = YAR[0]
     Z1 = data1[0]
-    Yc = data1[1]
+    Yc = data1[2]
 
     if y == '0':
         v = [300,500,1000,1500,2000]
         norm = matplotlib.colors.Normalize(vmin=300, vmax=2300)
-        sc = plt.scatter(Z1,Yc,c=data1[3],cmap=plt.cm.rainbow,s=2,norm=norm)
+        sc = plt.scatter(Z1,Yc,c=data1[4],cmap=plt.cm.rainbow,s=2,norm=norm)
     elif y == '1':
         #v = [0.0,0.5e9,1e9,1.5e9,2e9,2.5e9]
         #norm = matplotlib.colors.Normalize(vmin=0, vmax=2.2e9)
         v = [0,100,200,300,350]
         norm = matplotlib.colors.Normalize(vmin=0, vmax=350)
-        sc = plt.scatter(Z1,Yc,c=data1[2],cmap=plt.cm.rainbow,s=2,norm=norm)
+        sc = plt.scatter(Z1,Yc,c=data1[3],cmap=plt.cm.rainbow,s=2,norm=norm)
 
 cbar = plt.colorbar(sc,ticks=v)
 if y == '0':

@@ -321,7 +321,7 @@ void Lagrangian::calcTrans(int ip)
 
 void Lagrangian::solve()
 {
-    for (int num=1; num<10000; num++) {
+    for (int num=1; num<100000; num++) {
         this->inject();
         if (diameter_[0]>small&&position_[0]>=z_[0]&&position_[0]<=z_[z_.size()-1]) {
             this->track();

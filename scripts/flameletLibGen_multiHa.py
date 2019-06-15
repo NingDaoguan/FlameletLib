@@ -6,12 +6,11 @@ import matplotlib.pyplot as plt
 
 p = 101325.0
 
-data_directory_orig = 'multihatables/ha_1/'
+data_directory_orig = 'multihatables/ha_orig/'
 if not os.path.exists(data_directory_orig):
     os.makedirs(data_directory_orig)
-data_directory_low = 'multihatables/ha_0/'
-if not os.path.exists(data_directory_low):
-    os.makedirs(data_directory_low)
+
+totalHaNum = 5
 
 numLoop = int( input('Enter loop numer\n> ') )
 fuelType = input('1:\tJet-A\n2:\tnc12h26\n3:\tC2H5OH\n> ')
@@ -74,7 +73,6 @@ for n in range(0,numLoop+1,1):
         filename = 'strain_loop_{0:02d}.csv'.format(n)
 
     filename_orig = data_directory_orig + 'flameletTable_{:}.csv'.format(n)
-    filename_low = data_directory_low + 'flameletTable_{:}.csv'.format(n)
 
 
     with open(filename_orig, 'w+') as fo:
@@ -112,51 +110,6 @@ for n in range(0,numLoop+1,1):
     data2.append(list(ha))
     data2.append(list(Yc))
     data2.append(list(omegaYc))
-    # ax1.plot(Z,T)
-    # ax2.plot(Z,ha)
-    # ax3.plot(Z,Yc)
-    # ax4.plot(Z,omegaYc)
-    data2.append(list(T))
-    for i in range(len(data1)):
-        if i >= speciesStart:
-            data2.append(list(data1[i]))
-        else:
-            pass
-    data2 = np.array(data2)
-    data2 = np.transpose(data2)
-    if Z[0] > 0.2:
-        data2 = data2[::-1]
-    else:
-        pass
-    with open(filename_orig,'a') as f:
-        np.savetxt(f, data2, delimiter=',',fmt='%f')
-
-
-
-    # low ha tables
-    with open(filename_low, 'w+') as fo:
-        line = 'Z,ha,Yc,omegaYc,T'
-        for i in speciesNames:
-            line += f',{i}'
-        fo.write(line+'\n')
-
-    T = T-200
-    # Calculate omegaYc
-    Y = []
-    ha = np.zeros(len(Z))
-    omegaYc = np.zeros(len(Z))
-    for i in range(len(Z)):
-        Y = data1orig[i][speciesStart::]
-        gas.TPY = (T[i], p, Y)
-        ha[i] = gas.enthalpy_mass
-        omegaYc[i] = gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
-                    +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
-
-    data2 = []
-    data2.append(list(Z))
-    data2.append(list(ha))
-    data2.append(list(Yc))
-    data2.append(list(omegaYc))
     ax1.plot(Z,T)
     ax2.plot(Z,ha)
     ax3.plot(Z,Yc)
@@ -168,13 +121,65 @@ for n in range(0,numLoop+1,1):
         else:
             pass
     data2 = np.array(data2)
-    data2 = np.transpose(data2)
     if Z[0] > 0.2:
-        data2 = data2[::-1]
+        dataOut = np.copy(data2.T[::-1])
     else:
-        pass
-    with open(filename_low,'a') as f:
-        np.savetxt(f, data2, delimiter=',',fmt='%f')
+        dataOut = np.copy(data2.T)
+    with open(filename_orig,'a') as f:
+        np.savetxt(f, dataOut, delimiter=',',fmt='%f')
+
+
+
+    # low ha tables
+    haorig = np.copy(ha)
+    dha = [0.2e05, 0.5e05, 1e05, 1.5e05, 2e05]
+    for hi in range(totalHaNum):
+        data_directory_low = 'multihatables/ha_{:}/'.format(totalHaNum-hi-1)
+        if not os.path.exists(data_directory_low):
+            os.makedirs(data_directory_low)
+        filename_low = data_directory_low + 'flameletTable_{:}.csv'.format(n)
+
+        with open(filename_low, 'w+') as fo:
+            line = 'Z,ha,Yc,omegaYc,T'
+            for i in speciesNames:
+                line += f',{i}'
+            fo.write(line+'\n')
+
+
+        ha = haorig - dha[hi]
+        # Calculate omegaYc
+        Y = []
+        T = np.zeros(len(Z))
+        omegaYc = np.zeros(len(Z))
+        for i in range(len(Z)):
+            Y = data1orig[i][speciesStart::]
+            gas.HPY = (ha[i], p, Y)
+            T[i] = gas.T
+            omegaYc[i] = gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
+                        +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
+
+        data2 = []
+        data2.append(list(Z))
+        data2.append(list(ha))
+        data2.append(list(Yc))
+        data2.append(list(omegaYc))
+        ax1.plot(Z,T)
+        ax2.plot(Z,ha)
+        ax3.plot(Z,Yc)
+        ax4.plot(Z,omegaYc)
+        data2.append(list(T))
+        for i in range(len(data1)):
+            if i >= speciesStart:
+                data2.append(list(data1[i]))
+            else:
+                pass
+        data2 = np.array(data2)
+        if Z[0] > 0.2:
+            dataOut = np.copy(data2.T[::-1])
+        else:
+            dataOut = np.copy(data2.T)
+        with open(filename_low,'a') as f:
+            np.savetxt(f, dataOut, delimiter=',',fmt='%f')
 
 plt.savefig('multihatables.png',dpi=500)
 plt.show()
