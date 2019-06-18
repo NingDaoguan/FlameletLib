@@ -104,20 +104,20 @@ elif x==7:
     reaction_mechanism = 'Ethanol_31.cti'
     gas = ct.Solution(reaction_mechanism)
     gas.transport_model = 'UnityLewis'
-    width = 0.4 # 400mm wide
+    width = 0.3 # 300mm wide
     f = ct.CounterflowDiffusionFlame(gas, width=width)
     # Define the operating pressure and boundary conditions
     f.P = 1.0e5  # 1 bar
-    f.fuel_inlet.mdot = 0.5 # kg/m^2/s
+    f.fuel_inlet.mdot = 0.45 # kg/m^2/s
     # f.fuel_inlet.X = 'N2:0.27078, AR:0.00347049, H2:0.251899, \
     #                   H2O:0.0371238, CO:0.18032, CO2:0.0733696, CH4:0.183025'
     # f.fuel_inlet.X = 'C2H5OH:2.66167, N2:3.714, AR:0.0476, CO2:0.66667, H2O:1.0'
     # f.fuel_inlet.X = 'C2H5OH:2.995, O2:1, N2:3.714, AR:0.0476'
     f.fuel_inlet.X = 'C2H5OH:1'
-    f.fuel_inlet.T = 300.0  # K
-    f.oxidizer_inlet.mdot = 0.4 # kg/m^2/s
+    f.fuel_inlet.T = 450.0  # K
+    f.oxidizer_inlet.mdot = 0.36 # kg/m^2/s
     f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-    f.oxidizer_inlet.T = 300.0  # K
+    f.oxidizer_inlet.T = 450.0  # K
     temperature_limit_extinction = np.maximum(f.fuel_inlet.T, f.oxidizer_inlet.T)  # K
 elif x==8:
     reaction_mechanism = 'gri30.cti'

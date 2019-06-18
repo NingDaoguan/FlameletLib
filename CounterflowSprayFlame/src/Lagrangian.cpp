@@ -12,16 +12,16 @@ Lagrangian::Lagrangian( const doublereal diameterInjection,
     diameterInjection_(diameterInjection),
     mdotInjection_(mdotInjection),
     TInjection_(TInjection),
-    dt_(2e-5),
+    dt_(4e-5),
     small(1.0e-10),
     p0_(p0),
     flow_(0),
     loopcnt_(0)
 {
     const doublereal d0 = diameterInjection_;
-    const doublereal V =  Pi*d0*d0*d0/6.0;
-    const doublereal dM = rhod(TInjection_) * V;
-    const doublereal nPerSec_ = mdotInjection_ / dM;
+    Vd_ =  Pi*d0*d0*d0/6.0;
+    const doublereal dM = rhod(TInjection_) * Vd_;
+    nPerSec_ = mdotInjection_ / dM;
     np_ = nPerSec_*dt_;
     std::cout << "#\tn particles per parcel\t:\t" << np_ << std::endl;
 }
@@ -47,6 +47,9 @@ bool Lagrangian::setupFlowField(const vector_fp& solution)
             u_.push_back(solution[i]);
             cnt++;
         }
+        else if (i%(flow_->nsp()+c_offset_Y) == 1) {
+            V_.push_back(solution[i]);
+        }
         else if (i%(flow_->nsp()+c_offset_Y) == 2) {
             T_.push_back(solution[i]);
             std::cout << std::setw(10) << std::setprecision(5) << T_[cnt-1];
@@ -61,9 +64,11 @@ bool Lagrangian::setupFlowField(const vector_fp& solution)
         }
     }
     std::cout << std::endl;
+    N_.resize(z_.size(), 0.0);
+    // rhodAlpha_.resize(z_.size(), 0.0);
 
     this->evalRsd();
-    return (rsd_ < 0.0002 || loopcnt_ > 100);
+    return (rsd_ < 0.001 || loopcnt_ > 80);
 }
 
 
@@ -73,6 +78,7 @@ void Lagrangian::clear() {
     rho_.clear();
     mu_.clear();
     u_.clear();
+    V_.clear();
     T_.clear();
     Y_.resize(fuelName_.size());
     for (size_t i=0; i<Y_.size(); i++) {
@@ -94,6 +100,8 @@ void Lagrangian::clear() {
     tt_.clear();
     td_.clear();
 
+    N_.clear();
+    // rhodAlpha_.clear();
     // clear transfer fields
     htf_.clear();
     mtf_.resize(fuelName_.size());
@@ -105,23 +113,23 @@ void Lagrangian::clear() {
 
 
 void Lagrangian::relax() {
-    vector_fp thtf(htf_);
-    std::vector<std::vector<doublereal> > tmtf(mtf_);
+    // vector_fp thtf(htf_);
+    // std::vector<std::vector<doublereal> > tmtf(mtf_);
 
     if (loopcnt_ == 0) {
-        this->scale(htf_, 0.6*rlxf_);
+        this->scale(htf_, 0.05*rlxf_);
         for (size_t i=0; i<fuelName_.size(); i++) {
-            this->scale(mtf_[i], 1.5);
+            this->scale(mtf_[i], 0.7*rlxf_);
         }
-        thtf = htf_;
-        tmtf = mtf_;
+        // thtf = htf_;
+        // tmtf = mtf_;
     }
-    else {
-        this->relax(htf_, htfOld_);
-        for (size_t i=0; i<fuelName_.size(); i++) {
-            this->relax(mtf_[i], mtfOld_[i]);
-        }
-    }
+    // else {
+    //     this->relax(htf_, htfOld_);
+    //     for (size_t i=0; i<fuelName_.size(); i++) {
+    //         this->relax(mtf_[i], mtfOld_[i]);
+    //     }
+    // }
 
     for (size_t i=0; i<fuelName_.size(); i++) {
         for (size_t j=0; j<tmtf_.size(); j++) {
@@ -129,8 +137,8 @@ void Lagrangian::relax() {
         }
     }
 
-    htfOld_ = thtf;
-    mtfOld_ = tmtf;
+    // htfOld_ = thtf;
+    // mtfOld_ = tmtf;
 }
 
 
@@ -226,8 +234,8 @@ void Lagrangian::calcTrans(int ip)
     for (size_t i=0; i<fuelName_.size(); i++) {
         YGas[i] = linearInterpolate(Y_[i], oldP);   
     }
-    const doublereal Pr = 0.7;
-    const doublereal Sc = 0.7;
+    const doublereal Pr = 0.75;
+    const doublereal Sc = 0.75;
     const doublereal D = muGas/(rhoGas*Sc); // diffusion coefficient
     const doublereal W_C = 28.97e-3; // molecular weight of air 
 
@@ -276,9 +284,9 @@ void Lagrangian::calcTrans(int ip)
 
     // Calculate the new temperature and the enthalpy transfer
     doublereal Tnew = oldT + deltaT;
-    Tnew = std::min(Tnew, T_B-1.0);
+    Tnew = std::min(Tnew, T_B-2.0);
     temperature_[ip] = Tnew;
-    hTrans_[ip] = md*cpd(oldT)*deltaTcp / dt_ + mdot*cpd(0.5*(oldT + Tnew))*(Tnew - 298.15);
+    hTrans_[ip] = md*cpd(oldT)*deltaTcp / dt_; //+ mdot*cpd(0.5*(oldT + Tnew))*(Tnew - 298.15);
 
     // std::cout<< -md*cpd(oldT)*deltaT / dt_ + mdot*latentHeat(oldT)
              // << " "
@@ -289,26 +297,26 @@ void Lagrangian::calcTrans(int ip)
 
     if (diameter_[ip] > small) {
         // calculate force
-        const doublereal dm = 0.5*(oldD + diameter_[ip]);
-        const doublereal mm = 0.5*(md + mdNew);
-        doublereal Red = rhoGas * std::abs(uGas - oldV) * dm / muGas;
-        Red = (Red > small ? Red : small);
-        doublereal Cd = 0.0;
-        // Wen-Yu drag model--------------------------------------------------+
-        // F = 0.5*Cd*rhoGas*(uGas-uDrop)*|uGas-uDrop|*Ap                     |
-        // { Cd = 24.0/Red * (1.0+0.15*pow(Red,0.687)) # Re<1000              |
-        // { Cd = 0.44 # Re>=1000                                             |
-        // End----------------------------------------------------------------+
-        if (Red<1000) {
-            Cd = 24.0/Red;
-            Cd *= (1.0+0.15*std::pow(Red,0.687));
-        }
-        else {
-            Cd = 0.44;
-        }
-        // Second-order Runge-Kutta method
-        doublereal F = 0.5*Cd*rhoGas*(uGas-oldV)*std::abs(uGas-oldV)*Pi*dm*dm/4.0;
-        velocity_[ip] += F*dt_/mm;
+        // const doublereal dm = 0.5*(oldD + diameter_[ip]);
+        // const doublereal mm = 0.5*(md + mdNew);
+        // doublereal Red = rhoGas * std::abs(uGas - oldV) * dm / muGas;
+        // Red = (Red > small ? Red : small);
+        // doublereal Cd = 0.0;
+        // // Wen-Yu drag model--------------------------------------------------+
+        // // F = 0.5*Cd*rhoGas*(uGas-uDrop)*|uGas-uDrop|*Ap                     |
+        // // { Cd = 24.0/Red * (1.0+0.15*pow(Red,0.687)) # Re<1000              |
+        // // { Cd = 0.44 # Re>=1000                                             |
+        // // End----------------------------------------------------------------+
+        // if (Red<1000) {
+        //     Cd = 24.0/Red;
+        //     Cd *= (1.0+0.15*std::pow(Red,0.687));
+        // }
+        // else {
+        //     Cd = 0.44;
+        // }
+        // // Second-order Runge-Kutta method
+        // doublereal F = 0.5*Cd*rhoGas*(uGas-oldV)*std::abs(uGas-oldV)*Pi*dm*dm/4.0;
+        velocity_[ip] = uGas;
         position_[ip] = 0.5*(oldV + velocity_[ip])*dt_ + oldP;
     }
     else {
@@ -322,11 +330,22 @@ void Lagrangian::calcTrans(int ip)
 void Lagrangian::solve()
 {
     for (int num=1; num<100000; num++) {
+        N_[0] = nPerSec_ / u_[0];
+        // rhodAlpha_[0] = rhod(TInjection_) * N_[0] * Vd_;
+
+        N_[z_.size()-1] = 0.0;
+        // rhodAlpha_[z_.size()-1] = 0.0;
+        for (int j=1; j<z_.size()-1; j++) {
+            N_[j] += dt_*(-u_[j]*dNdz(j) - N_[j]*dudz(j) - 2.0*N_[j]*V_[j] );
+            // n_[j] += dt_*( -(n_[j]*u_[j] - n_[j-1]*u_[j-1])/(z_[j] - z_[j-1]) ); //- 2*n_[j]*V_[j] );
+            // rhodAlpha_[j] += dt_*(-u_[j]*drdadz(j) - rhodAlpha_[j]*dudz(j) - 2*rhodAlpha_[j]*V_[j] );
+        }
+
         this->inject();
         if (diameter_[0]>small&&position_[0]>=z_[0]&&position_[0]<=z_[z_.size()-1]) {
             this->track();
         }
-        else break;
+        else continue;
         for (int ip=0; ip<num; ip++) {
             if (position_[ip] > z_[z_.size()-1] || position_[ip] < z_[0]) {
                 continue;
@@ -362,12 +381,15 @@ void Lagrangian::evalTrans()
     doublereal dz;
     doublereal sumH = 0.0;
     vector_fp sumM(fuelName_.size(), 0.0);
+    int numPc = 0;
+    doublereal vol = 0.0;
 
     // left-most point
     rightz = z_[1];
     // find
     sumH = 0.0;
     for (size_t is=0; is<sumM.size(); is++) sumM[is] = 0;
+    numPc = 0;
     for (size_t ip=0; ip<position_.size(); ip++) {
         dz = rightz - z_[0];
         if (position_[ip]>z_[0] && position_[ip]<=rightz) {
@@ -376,12 +398,15 @@ void Lagrangian::evalTrans()
             for (size_t i=0;i<fuelName_.size();i++) {
                 sumM[i] += (rightLength/dz) * mTrans_[i][ip];
             }
+            numPc++;
         }
     }
     dz = rightz - z_[0];
-    htf_[0] = sumH/(0.5*dz);
+    vol = numPc*np_ / (0.5*(N_[0] + N_[1]) + small);
+    std::cout << vol << std::endl;
+    htf_[0] = sumH/(0.5*vol);
     for (size_t i=0; i<mtf_.size(); i++) {
-        mtf_[i][0] = sumM[i]/(0.5*dz);
+        mtf_[i][0] = sumM[i]/(vol);
     }
 
     // interior points
@@ -391,6 +416,7 @@ void Lagrangian::evalTrans()
         // find
         sumH = 0.0;
         for (size_t is=0; is<sumM.size(); is++) sumM[is] = 0;
+        numPc = 0;
         for (size_t ip=0; ip<position_.size(); ip++) {
             dz = z_[iz] - leftz;
             if (position_[ip]>leftz && position_[ip]<=z_[iz]) {
@@ -399,6 +425,7 @@ void Lagrangian::evalTrans()
                 for (size_t i=0; i<fuelName_.size(); i++) {
                     sumM[i] += (leftLength/dz) * mTrans_[i][ip];
                 }
+                numPc++;
             }
 
             dz = rightz - z_[iz];
@@ -408,12 +435,14 @@ void Lagrangian::evalTrans()
                 for (size_t i=0;i<fuelName_.size();i++) {
                     sumM[i] += (rightLength/dz) * mTrans_[i][ip];
                 }
+                numPc++;
             }
         }
         dz = rightz - leftz;
-        htf_[iz] = sumH/(csArea(iz)*0.5*dz);
+        vol = numPc * np_ / (N_[iz] + small);
+        htf_[iz] = sumH/(0.5*vol + small);
         for (size_t i=0; i<mtf_.size(); i++) {
-            mtf_[i][iz] = sumM[i]/(csArea(iz)*0.5*dz);
+            mtf_[i][iz] = sumM[i]/(0.5*vol + small);
         }
     }
 
@@ -422,6 +451,7 @@ void Lagrangian::evalTrans()
     // find
     sumH = 0.0;
     for (size_t is=0; is<sumM.size(); is++) sumM[is] = 0;
+    numPc = 0;
     for (size_t ip=0; ip<position_.size(); ip++) {
         dz = z_[z_.size()-1] - leftz;
         if (position_[ip]>leftz && position_[ip]<=z_[z_.size()-1]) {
@@ -430,12 +460,14 @@ void Lagrangian::evalTrans()
             for (size_t i=0;i<fuelName_.size();i++) {
                 sumM[i] += (leftLength/dz) * mTrans_[i][ip];
             }
+            numPc++;
         }
     }
     dz = z_[z_.size()-1] - leftz;
-    htf_[z_.size()-1] = sumH/(0.5*dz);
+    vol = numPc * np_ / (0.5*(N_[z_.size()-1] + N_[z_.size()-2]) + small);
+    htf_[z_.size()-1] = sumH/(0.5*vol + small);
     for (size_t i=0; i<mtf_.size(); i++) {
-        mtf_[i][z_.size()-1] = sumM[i]/(0.5*dz);
+        mtf_[i][z_.size()-1] = sumM[i]/(0.5*vol + small);
     }
 
     // multiplied by np_
@@ -449,6 +481,78 @@ void Lagrangian::evalTrans()
     }
 }
 
+/*
+void Lagrangian::evalTrans()
+{
+    // resize to grid size
+    htf_.resize(z_.size(), 0.0);
+    for (size_t i=0; i<mtf_.size(); i++) {
+        mtf_[i].resize(z_.size(), 0.0);
+    }
+    tmtf_.resize(z_.size(), 0.0);
+
+    doublereal leftz;
+    doublereal rightz;
+    doublereal sumH;
+    doublereal sumM;
+    int numPc;
+
+    sumH = 0.0;
+    sumM = 0.0;
+    numPc = 0;
+    leftz = z_[0];
+    rightz = 0.5*(z_[0]+z_[1]);
+    for (size_t ip=0; ip<position_.size(); ip++) {
+        if (position_[ip]>leftz && position_[ip]<=rightz) {
+            sumH += hTrans_[ip];
+            sumM += mTrans_[0][ip];
+            numPc++;
+        }
+    }
+    sumH /= (numPc+small);
+    sumM /= (numPc+small);
+    htf_[0] = sumH * N_[0];
+    mtf_[0][0] = sumM * N_[0];
+
+
+    for (size_t iz=1; iz<z_.size()-1; iz++) {
+        sumH = 0.0;
+        sumM = 0.0;
+        numPc = 0;
+        leftz = 0.5*(z_[iz-1]+z_[iz]);
+        rightz = 0.5*(z_[iz]+z_[iz+1]);
+        for (size_t ip=0; ip<position_.size(); ip++) {
+            if (position_[ip]>leftz && position_[ip]<=rightz) {
+                sumH += hTrans_[ip];
+                sumM += mTrans_[0][ip];
+                numPc++;
+            }
+        }
+        sumH /= (numPc+small);
+        sumM /= (numPc+small);
+        htf_[iz] = sumH * N_[iz];
+        mtf_[0][iz] = sumM * N_[iz];
+    }
+
+
+    sumH = 0.0;
+    sumM = 0.0;
+    numPc = 0;
+    leftz = 0.5*(z_[z_.size()-2]+z_[z_.size()-1]);
+    rightz = z_[z_.size()-1];
+    for (size_t ip=0; ip<position_.size(); ip++) {
+        if (position_[ip]>leftz && position_[ip]<=rightz) {
+            sumH += hTrans_[ip];
+            sumM += mTrans_[0][ip];
+            numPc++;
+        }
+    }
+    sumH /= (numPc+small);
+    sumM /= (numPc+small);
+    htf_[z_.size()-1] = sumH * N_[z_.size()-1];
+    mtf_[0][z_.size()-1] = sumM * N_[z_.size()-1];
+}
+*/
 
 void Lagrangian::evalRsd()
 {
@@ -474,42 +578,42 @@ void Lagrangian::evalRsd()
 }
 
 
-doublereal Lagrangian::csArea(size_t iz) const
-{
-    doublereal rho1;
-    doublereal u1;
-    doublereal rho2 = rho_[iz] > small ? rho_[iz] : 1.1;
-    doublereal u2 = u_[iz];
-    u2 = (std::abs(u2) > small ? u2 : small);
+// doublereal Lagrangian::csArea(size_t iz) const
+// {
+//     doublereal rho1;
+//     doublereal u1;
+//     doublereal rho2 = rho_[iz] > small ? rho_[iz] : 1.1;
+//     doublereal u2 = u_[iz];
+//     u2 = (std::abs(u2) > small ? u2 : small);
 
-    if (u2 >=0 ) {
-        rho1 = rho_[0] > small ? rho_[0] : 1.1;
-        u1 = u_[0];
-        doublereal mevap = sumevap(iz);
-        // std::cout << mevap << std::endl;
-        return (rho1*u1 + mevap) / (rho2*u2);
-    }
-    else {
-        rho1 = rho_[z_.size()-1] > small ? rho_[z_.size()-1] : 1.1;
-        u1 = u_[z_.size()-1];
-        return (rho1*u1) / (rho2*u2);
-    }
-}
+//     if (u2 >=0 ) {
+//         rho1 = rho_[0] > small ? rho_[0] : 1.1;
+//         u1 = u_[0];
+//         doublereal mevap = sumevap(iz);
+//         // std::cout << mevap << std::endl;
+//         return (rho1*u1 + mevap) / (rho2*u2);
+//     }
+//     else {
+//         rho1 = rho_[z_.size()-1] > small ? rho_[z_.size()-1] : 1.1;
+//         u1 = u_[z_.size()-1];
+//         return (rho1*u1) / (rho2*u2);
+//     }
+// }
 
 
-doublereal Lagrangian::sumevap(size_t iz) const
-{
-    doublereal sum = 0.0;
-    for (size_t ip=0; ip<position_.size(); ip++) {
-        if (position_[ip]>z_[0] && position_[ip]<=z_[iz]) {
-            for (size_t i=0; i<fuelName_.size(); i++) {
-                sum += np_*mTrans_[i][ip];
-            }
-        }
-        else continue;
-    }
-    return sum;
-}
+// doublereal Lagrangian::sumevap(size_t iz) const
+// {
+//     doublereal sum = 0.0;
+//     for (size_t ip=0; ip<position_.size(); ip++) {
+//         if (position_[ip]>z_[0] && position_[ip]<=z_[iz]) {
+//             for (size_t i=0; i<fuelName_.size(); i++) {
+//                 sum += np_*mTrans_[i][ip];
+//             }
+//         }
+//         else continue;
+//     }
+//     return sum;
+// }
 
 
 void Lagrangian::write() const
@@ -523,12 +627,15 @@ void Lagrangian::write() const
               << td_[it] << std::endl;
     }
 
-    std::ofstream fout2("trans" + outfile_);
-    fout2 << "# z (m), hTrans (J/m^3/s), mTrans (kg/m^3/s)" << std::endl;
+    std::ofstream fout2("trans.csv");
+    fout2 << "# z (m), N (m^-3), rda (kg/m^3)" << std::endl;
     for (size_t iz=0; iz<z_.size(); iz++) {
         fout2 << z_[iz] << ","
               << htf_[iz] << ","
-              << mtf_[0][iz] << std::endl;
+              << mtf_[0][iz] << ","
+              << N_[iz] << std::endl;
+              // << ","
+              // << rhodAlpha_[iz] << std::endl;
     }
 }
 

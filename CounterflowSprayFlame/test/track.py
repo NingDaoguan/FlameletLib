@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-fname = input('file name:\n>')
+#fname = input('file name:\n>')
+fname = 'track.csv'
 data = np.loadtxt(fname, delimiter=',', comments='#')
 data = np.transpose(data)
 t = data[0]

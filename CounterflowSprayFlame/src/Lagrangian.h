@@ -104,12 +104,24 @@ private:
 
     void relax();
 
-    void relax(vector_fp& field1, const vector_fp& field0) {
-        for (size_t i=0; i<field1.size(); i++) {
-            field1[i] = rlxf_*field1[i]
-                        + (1 - rlxf_)*linearInterpolate(field0, zOld_, z_[i]);
-        }
+    doublereal dNdz(int j) const {
+        int jloc = (u_[j] > 0.0 ? j : j + 1);
+        return (N_[jloc] - N_[jloc-1]) / (z_[jloc] - z_[jloc-1]);
     }
+    // doublereal drdadz(int j) const {
+    //     int jloc = (u_[j] > 0.0 ? j : j + 1);
+    //     return (rhodAlpha_[jloc] - rhodAlpha_[jloc-1]) / (z_[jloc] - z_[jloc-1]);
+    // }
+    doublereal dudz(int j) const {
+        int jloc = (u_[j] > 0.0 ? j : j + 1);
+        return (u_[jloc] - u_[jloc-1]) / (z_[jloc] - z_[jloc-1]);
+    }
+    // void relax(vector_fp& field1, const vector_fp& field0) {
+    //     for (size_t i=0; i<field1.size(); i++) {
+    //         field1[i] = rlxf_*field1[i]
+    //                     + (1 - rlxf_)*linearInterpolate(field0, zOld_, z_[i]);
+    //     }
+    // }
 
     void scale(vector_fp& field, const doublereal fc) {
         for (auto it=field.begin(); it!=field.end(); it++) {
@@ -117,9 +129,9 @@ private:
         }
     }
 
-    doublereal csArea(size_t iz) const;
+    // doublereal csArea(size_t iz) const;
 
-    doublereal sumevap(size_t iz) const;
+    // doublereal sumevap(size_t iz) const;
 
     doublereal linearInterpolate(const vector_fp& field,
                                  const doublereal z) const;
@@ -147,12 +159,14 @@ private:
     doublereal diameterInjection_;
     doublereal mdotInjection_;
     doublereal TInjection_;
+    doublereal Vd_;
     doublereal dt_;
     doublereal small;
     doublereal p0_;
     doublereal rlxf_;
     std::string outfile_;
     doublereal np_;
+    doublereal nPerSec_;
     // fuel
     std::vector<std::string> fuelName_;
     doublereal W_V;
@@ -167,6 +181,7 @@ private:
     vector_fp mu_;
     vector_fp cp_;
     vector_fp u_;
+    vector_fp V_;
     vector_fp T_;
     std::vector<std::vector<doublereal> > Y_;
 
@@ -186,6 +201,9 @@ private:
     vector_fp tt_;
 
 
+    vector_fp N_;
+    // vector_fp rhodAlpha_;
+
     // transfer fields
     vector_fp htf_;
     std::vector<std::vector<doublereal> > mtf_;
@@ -194,8 +212,8 @@ private:
     // old fields
     vector_fp zOld_;
     vector_fp TOld_;
-    vector_fp htfOld_;
-    std::vector<std::vector<doublereal> > mtfOld_;
+    // vector_fp htfOld_;
+    // std::vector<std::vector<doublereal> > mtfOld_;
 
 
     // loop

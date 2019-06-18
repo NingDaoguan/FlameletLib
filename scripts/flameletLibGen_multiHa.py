@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 
 p = 101325.0
 
-data_directory_orig = 'multihatables/ha_orig/'
+data_directory_orig = 'multihatables_frozenOmega/ha_orig/'
 if not os.path.exists(data_directory_orig):
     os.makedirs(data_directory_orig)
 
-totalHaNum = 5
+totalHaNum = 6
 
 numLoop = int( input('Enter loop numer\n> ') )
 fuelType = input('1:\tJet-A\n2:\tnc12h26\n3:\tC2H5OH\n> ')
@@ -132,9 +132,9 @@ for n in range(0,numLoop+1,1):
 
     # low ha tables
     haorig = np.copy(ha)
-    dha = [0.2e05, 0.5e05, 1e05, 1.5e05, 2e05]
+    dha = [0.1e05, 0.2e05, 0.5e05, 1e05, 1.5e05, 2e05]
     for hi in range(totalHaNum):
-        data_directory_low = 'multihatables/ha_{:}/'.format(totalHaNum-hi-1)
+        data_directory_low = 'multihatables_frozenOmega/ha_{:}/'.format(totalHaNum-hi-1)
         if not os.path.exists(data_directory_low):
             os.makedirs(data_directory_low)
         filename_low = data_directory_low + 'flameletTable_{:}.csv'.format(n)
@@ -150,13 +150,13 @@ for n in range(0,numLoop+1,1):
         # Calculate omegaYc
         Y = []
         T = np.zeros(len(Z))
-        omegaYc = np.zeros(len(Z))
+        # omegaYc = np.zeros(len(Z))
         for i in range(len(Z)):
             Y = data1orig[i][speciesStart::]
             gas.HPY = (ha[i], p, Y)
             T[i] = gas.T
-            omegaYc[i] = gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
-                        +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
+            # omegaYc[i] = gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
+            #             +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
 
         data2 = []
         data2.append(list(Z))
@@ -181,5 +181,5 @@ for n in range(0,numLoop+1,1):
         with open(filename_low,'a') as f:
             np.savetxt(f, dataOut, delimiter=',',fmt='%f')
 
-plt.savefig('multihatables.png',dpi=500)
+plt.savefig('multihatables_frozenOmega.png',dpi=500)
 plt.show()

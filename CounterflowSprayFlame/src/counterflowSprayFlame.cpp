@@ -207,11 +207,11 @@ void counterflowSprayFlame(doublereal mdotL, doublereal mdotR, doublereal len)
     locs[5]=0.7;
     locs[6]=1;
     values[0]=TinLeft;
-    values[1]=0.8*TinLeft+0.2*Tad;
+    values[1]=0.9*TinLeft+0.1*Tad;
     values[2]=0.6*Tad+0.4*TinLeft;
     values[3]=0.8*Tad+0.1*TinLeft+0.1*TinRight;
     values[4]=0.6*Tad+0.4*TinRight;
-    values[5]=0.8*TinRight+0.2*Tad;
+    values[5]=0.9*TinRight+0.1*Tad;
     values[6]=TinRight;
     flame.setInitialGuess("T",locs,values);
     values[0]=0.5*a0*(1*width);
@@ -222,6 +222,14 @@ void counterflowSprayFlame(doublereal mdotL, doublereal mdotR, doublereal len)
     values[5]=0.5*a0*(-0.2*width);
     values[6]=0.5*a0*(-1*width);
     flame.setInitialGuess("u",locs,values);
+    values[0]=0.2*a0;
+    values[1]=0.2*a0;
+    values[2]=0.2*a0;
+    values[3]=0.2*a0;
+    values[4]=0.2*a0;
+    values[5]=0.2*a0;
+    values[6]=0.2*a0;
+    flame.setInitialGuess("V",locs,values);
     for (int ik=0; ik<nsp;ik++)
     {
        values[0]=left.massFraction(ik);
