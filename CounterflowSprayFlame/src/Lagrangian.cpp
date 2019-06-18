@@ -12,7 +12,7 @@ Lagrangian::Lagrangian( const doublereal diameterInjection,
     diameterInjection_(diameterInjection),
     mdotInjection_(mdotInjection),
     TInjection_(TInjection),
-    dt_(4e-5),
+    dt_(2e-5),
     small(1.0e-10),
     p0_(p0),
     flow_(0),
@@ -236,7 +236,6 @@ void Lagrangian::calcTrans(int ip)
     }
     const doublereal Pr = 0.75;
     const doublereal Sc = 0.75;
-    const doublereal D = muGas/(rhoGas*Sc); // diffusion coefficient
     const doublereal W_C = 28.97e-3; // molecular weight of air 
 
     // Non-equilibrium Langmuir-Knudsen evaporation law
@@ -257,7 +256,8 @@ void Lagrangian::calcTrans(int ip)
                             * std::exp( (latentHeat(oldT)/(8.314/W_V) )
                             * (1.0/T_B - 1.0/oldT) );
         const doublereal Lk = muGas * std::sqrt(2.0*Pi*oldT*8.314/W_V) / (Sc*p0_);
-        const doublereal Xsneq = Xs - 2.0*Lk*beta/oldD;
+        doublereal Xsneq = Xs - 2.0*Lk*beta/oldD;
+        Xsneq = (Xsneq > small ? Xsneq : 0.5*Xs);
         doublereal Ysneq = Xsneq / ( Xsneq + (1.0 - Xsneq)*W_C/W_V );
         Ysneq = (Ysneq < 0.99999 ? Ysneq : 0.99999);
         doublereal B = (Ysneq - YGas[0]) / (1.0 - Ysneq); // single-component
@@ -284,9 +284,9 @@ void Lagrangian::calcTrans(int ip)
 
     // Calculate the new temperature and the enthalpy transfer
     doublereal Tnew = oldT + deltaT;
-    Tnew = std::min(Tnew, T_B-2.0);
+    Tnew = std::min(Tnew, T_B-1.0);
     temperature_[ip] = Tnew;
-    hTrans_[ip] = md*cpd(oldT)*deltaTcp / dt_; //+ mdot*cpd(0.5*(oldT + Tnew))*(Tnew - 298.15);
+    hTrans_[ip] = md*cpd(oldT)*deltaTcp / dt_ + mdot*1520.0*(Tnew - 298.15);
 
     // std::cout<< -md*cpd(oldT)*deltaT / dt_ + mdot*latentHeat(oldT)
              // << " "
@@ -628,7 +628,7 @@ void Lagrangian::write() const
     }
 
     std::ofstream fout2("trans.csv");
-    fout2 << "# z (m), N (m^-3), rda (kg/m^3)" << std::endl;
+    fout2 << "# z (m),htf (J/m3 s), mtf (kg/m3 s), N (m-3)" << std::endl;
     for (size_t iz=0; iz<z_.size(); iz++) {
         fout2 << z_[iz] << ","
               << htf_[iz] << ","
