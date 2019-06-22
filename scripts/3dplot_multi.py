@@ -15,19 +15,21 @@ fig = plt.figure()
 ax = fig.add_subplot(111, projection='3d')
 
 dim = input('dim:\n>')
-num = input('number:\n>')
 for idm in range(int(dim)):
-    for i in range(int(num)):
+    for i in range(100):
         fname = 'ha_{}/flameletTable_{:}.csv'.format(idm,i)
-        data = np.loadtxt(fname,delimiter=',',skiprows=1)
-        Z = data.T[0]
-        ha = data.T[1] / 1000.0
-        Yc = data.T[2]
-        omega = data.T[3]
-        T = data.T[4]
-        norm = matplotlib.colors.Normalize(vmin=250,vmax=2200)
+        try:
+            data = np.loadtxt(fname,delimiter=',',skiprows=1)
+            Z = data.T[0]
+            ha = data.T[1] / 1000.0
+            Yc = data.T[2]
+            omega = data.T[3]
+            T = data.T[4]
+            norm = matplotlib.colors.Normalize(vmin=250,vmax=2200)
 
-        sc = ax.scatter(Z,ha,Yc,c=T,cmap=plt.cm.rainbow,norm=norm)
+            sc = ax.scatter(Z,ha,Yc,c=T,cmap=plt.cm.rainbow,norm=norm)
+        except IOError:
+            break
 
 v = [250,500,1000,1500,2000]
 cbar = plt.colorbar(sc,ticks=v)

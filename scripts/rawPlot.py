@@ -90,7 +90,7 @@ for i in range(len(name)):
 
 # Plot T, Y, Z and droplets
 for j,file in enumerate(filename):
-    plt.figure(figsize=figs)
+    fig = plt.figure(figsize=figs)
     ax1 = plt.subplot(111)
     ax2 = ax1.twinx()
     data = np.loadtxt(file, delimiter=',', skiprows = 1)
@@ -143,8 +143,9 @@ for j,file in enumerate(filename):
     ax1.set_ylabel(r'Temperature (K)',fontsize=fonts1)
     ax1.tick_params(labelsize=fonts1)
     ax2.tick_params(labelsize=fonts1)
-    ax2.legend(loc=0,fontsize=fonts1)
-    ax1.legend(loc=0,fontsize=fonts1)
+    # ax2.legend(loc=0,fontsize=fonts1)
+    # ax1.legend(loc=0,fontsize=fonts1)
+    fig.legend(fontsize=fonts1,bbox_to_anchor=(1,1),bbox_transform=ax1.transAxes)
     # plt.xticks(x_ticks,color='k')
     # plt.savefig(file+'-x-T.png',dpi=500,bbox_inches='tight')
 
