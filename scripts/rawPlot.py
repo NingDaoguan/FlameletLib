@@ -33,7 +33,7 @@ with open(file) as f:
         name.append(line[i])
 majorIndex = []
 for i in range(len(name)):
-    if name[i] == 'z' or name[i] == 'z (m)':
+    if name[i] == 'z' or name[i] == 'z (m)' or name[i] == 'x (m)':
         xIndex = i
     elif name[i] == 'u' or name[i] == 'u (m/s)':
         uIndex = i
@@ -68,9 +68,11 @@ for i in range(len(name)):
         continue
     elif name[i] == 'OH':
         OHIndex = i
+        majorIndex.append(i)
         continue
     elif name[i] == 'AR':
         ARIndex = i
+        majorIndex.append(i)
         continue
     elif name[i] == 'NC12H26':
         NC12H26Index = i
@@ -85,6 +87,7 @@ for i in range(len(name)):
         C7H8Index = i
         continue
     elif name[i] == 'C2H5OH':
+        majorIndex.append(i)
         C2H5OHIndex = i
         continue
 
@@ -146,7 +149,8 @@ for j,file in enumerate(filename):
     # ax2.legend(loc=0,fontsize=fonts1)
     # ax1.legend(loc=0,fontsize=fonts1)
     fig.legend(fontsize=fonts1,bbox_to_anchor=(1,1),bbox_transform=ax1.transAxes)
-    # plt.xticks(x_ticks,color='k')
+    x_ticks = np.linspace(x[0], x[-1], 5)
+    plt.xticks(x_ticks,color='k')
     # plt.savefig(file+'-x-T.png',dpi=500,bbox_inches='tight')
 
 
@@ -280,7 +284,8 @@ for file in filename:
     data = np.transpose(data)
     x = data[xIndex]
     u = data[uIndex]
-    plt.scatter(x,u,label=file,c='k')
+    plt.plot(x,u,label=file[0:-5],lw=linew)
+plt.legend(loc=0,fontsize=fonts1)
 plt.tick_params(labelsize=fonts1)
 plt.xlabel(r'x (m)',fontsize=fonts1)
 plt.ylabel(r'u (m/s)',fontsize=fonts1)

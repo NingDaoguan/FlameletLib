@@ -10,7 +10,7 @@ if not os.path.exists(data_directory):
 print('1:\tJet-A-300K\n2:\tJet-A-300KLe1\n3:\tJet-A-800K\n4:\tJet-A-800KLe1\n5:\tnc12h26-300K\n6:\tnc12h26-300KLe1\n7:\tC2H5OH-300K')
 x = input()
 x = int(x)
-width = 0.023
+width = 0.02
 # PART 1: INITIALIZATION
 if x==1:
     reaction_mechanism = 'KEROSENE_CRECK231.cti'
@@ -99,13 +99,13 @@ elif x==7:
     f = ct.CounterflowDiffusionFlame(gas, width=width)
     # Define the operating pressure and boundary conditions
     f.P = 1.e5  # 1 bar
-    f.fuel_inlet.mdot = 9.2 # kg/m^2/s
+    f.fuel_inlet.mdot = 0.447777 # kg/m^2/s
     f.fuel_inlet.X = 'C2H5OH:1.0'
-    f.fuel_inlet.T = 352.0  # K
-    f.oxidizer_inlet.mdot = 6.8 # kg/m^2/s
+    f.fuel_inlet.T = 300.0  # K
+    f.oxidizer_inlet.mdot = 0.281573 # kg/m^2/s
     f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
     f.oxidizer_inlet.T = 300.0  # K
-    temperature_limit_extinction = 352  # K
+    temperature_limit_extinction = 300  # K
 else:
     print("INPUT ERROR")
 
