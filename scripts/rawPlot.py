@@ -1,17 +1,27 @@
 # Wed Mar 20 09:02:17 CST 2019
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib
+import matplotlib as mpl
 
-#Dz0 = 0.2e-4 # Diffusion coefficient of Z @ 273K
+mpl.rcParams['font.family'] = 'serif'
+mpl.rcParams['font.size'] = 20
+mpl.rcParams['font.weight'] = 'medium'
+mpl.rcParams['font.style'] = 'normal'
+# mpl.rcParams['font.serif'] = 'DejaVu Serif'
+# mpl.rcParams['font.serif'] = 'Georgia'
+# mpl.rcParams['font.serif'] = 'Times New Roman'
+# mpl.rcParams['text.usetex'] = True
+mpl.rcParams['mathtext.fontset'] = 'stix'
+# mpl.rcParams['mathtext.fallback_to_cm'] = True
+mpl.rcParams['lines.linewidth'] = 2
+mpl.rcParams['savefig.dpi'] = 300
+mpl.rcParams['savefig.bbox'] = 'tight'
+
 p0 = 101325.0 # Ambient pressure
 figs = (13,10)
 fonts1 = 23
 fonts2 = 25
 linew = 3
-plt.rcParams['font.family'] = 'serif'
-from matplotlib import rc
-plt.rcParams['mathtext.fontset'] = 'stix'
 # x_ticks = np.arange(0.0, 0.025, 0.005)
 xin = 'n'
 print("Enter file names:")
@@ -37,6 +47,9 @@ for i in range(len(name)):
         xIndex = i
     elif name[i] == 'u' or name[i] == 'u (m/s)':
         uIndex = i
+    elif name[i] == 'volFrac (-)':
+        volFracIndex = i
+        continue
     elif name[i] == 'T' or name[i] == 'T (K)':
         TIndex = i
     elif name[i] == 'O2':
@@ -65,6 +78,7 @@ for i in range(len(name)):
         continue
     elif name[i] == 'HCO':
         HCOIndex = i
+        majorIndex.append(i)
         continue
     elif name[i] == 'OH':
         OHIndex = i
@@ -90,6 +104,10 @@ for i in range(len(name)):
         majorIndex.append(i)
         C2H5OHIndex = i
         continue
+    # elif name[i] == 'CH4':
+    #     majorIndex.append(i)
+    #     CH4Index = i
+    #     continue
 
 # Plot T, Y, Z and droplets
 for j,file in enumerate(filename):
@@ -102,12 +120,8 @@ for j,file in enumerate(filename):
     u = data[uIndex]
     a = (u[0] - u[-1]) / (x[-1] - x[0])
     T = data[TIndex]
-    if xin is 'n':
-        YIN = data[ARIndex]
-        YIN_O = max(YIN[-1], YIN[0])
-    else:
-        YIN = data[N2Index]
-        YIN_O = max(YIN[-1], YIN[0])
+    YIN = data[ARIndex]
+    YIN_O = max(YIN[-1], YIN[0])
     YIN_F = 0
     Z = (YIN - YIN_O)/(YIN_F - YIN_O)
     print(f'Mean strain rate:\t{a}')
@@ -116,6 +130,7 @@ for j,file in enumerate(filename):
         ax2.plot(x,data[k],label=name[k],lw=linew)
     # ax2.plot(x,10000*data[HCOIndex],label=name[HCOIndex] + r'$\times 10^4$',lw=linew)
     # ax2.plot(x,10*data[OHIndex],label=name[OHIndex] + r'$\times 10$',lw=linew)
+    # ax2.plot(x,data[volFracIndex],label='Volume fraction',ls=':',c='b',lw=linew)
     ax2.plot(x,Z,label='Z',ls=':',c='r',lw=linew)
 
     filename2 = 'LAG' + file
@@ -137,25 +152,39 @@ for j,file in enumerate(filename):
         p.append(p1[-1])
         d.append(0)
         ax2.scatter(p,d,label=r'Droplet',marker='o',s=50,c='r')
-        ax2.set_ylabel(r'$Y$ / $Z$ / $d^*$ (-)',fontsize=fonts1)
+        ax2.set_ylabel(r'$Y$ / $Z$ / $d^*$ (-)')
     except IOError:
-        ax2.set_ylabel(r'$Y$ / $Z$ (-)',fontsize=fonts1)
+        ax2.set_ylabel(r'$Y$ / $Z$ (-)')
+        pass
+    
+    filename2 = 'dispersed' + file[6::]
+    try:
+        data2 = np.loadtxt(filename2,delimiter=',',comments='#',skiprows=1)
+        data2 = np.transpose(data2)
+        volFrac = data2[1]
+        rhod = data2[2]
+        Td = data2[3]
+        ax2.plot(data[0],volFrac,label='Volume fraction',ls=':',c='b',lw=linew)
+        ax2.set_ylabel(r'$Y$ / $Z$ / $\alpha$ (-)')
+    except IOError:
         pass
 
-    ax1.set_xlabel(r'x (m)', fontsize=fonts1)
-    ax1.set_ylabel(r'Temperature (K)',fontsize=fonts1)
-    ax1.tick_params(labelsize=fonts1)
-    ax2.tick_params(labelsize=fonts1)
-    # ax2.legend(loc=0,fontsize=fonts1)
-    # ax1.legend(loc=0,fontsize=fonts1)
-    fig.legend(fontsize=fonts1,bbox_to_anchor=(1,1),bbox_transform=ax1.transAxes)
+    ax1.set_xlabel(r'$x$ (m)')
+    ax1.set_ylabel(r'$T$ (K)')
+    ax1.margins(x=0.0)
+    ax1.set_ylim(300,2500)
+    # ax1.set_ylim(bottom=300)
+    ax2.set_ylim(0,1)
+    # ax2.set_ylim(bottom=0)
+    fig.legend(bbox_to_anchor=(1,1), bbox_transform=ax1.transAxes)
     x_ticks = np.linspace(x[0], x[-1], 5)
     plt.xticks(x_ticks,color='k')
+    fig.tight_layout()
     # plt.savefig(file+'-x-T.png',dpi=500,bbox_inches='tight')
 
 
 # Plot T-Z
-plt.figure(figsize=figs)
+fig, ax = plt.subplots(figsize=figs)
 for i,file in enumerate(filename):
     data = np.loadtxt(file, delimiter=',', skiprows = 1)
     data = np.transpose(data)
@@ -169,125 +198,39 @@ for i,file in enumerate(filename):
         YIN_O = max(YIN[-1], YIN[0])
     YIN_F = 0
     Z = (YIN - YIN_O)/(YIN_F - YIN_O)
-    plt.plot(Z,T,lw=linew)
-plt.tick_params(labelsize=fonts1)
-plt.xlabel(r'Z (-)',fontsize=fonts1)
-plt.ylabel(r'T (K)',fontsize=fonts1)
-
-'''
-# Plot Z-Chi:T
-plt.figure(figsize=figs)
-for i,file in enumerate(filename):
-    data = np.loadtxt(file, delimiter=',', skiprows = 1)
-    data = np.transpose(data)
-    x = data[xIndex]
-    T = data[TIndex]
-    if xin is 'n':
-        YIN = data[ARIndex]
-        YIN_O = max(YIN[-1], YIN[0])
-    else:
-        YIN = data[N2Index]
-        YIN_O = max(YIN[-1], YIN[0])
-    YIN_F = 0
-    Z = (YIN - YIN_O)/(YIN_F - YIN_O)
-    chi = np.zeros(len(x)) # Dissipation rate \chi
-    chi[0] = (Z[1] - Z[0]) / (x[1] - x[0]) # Gradient computation
-    for i in range(len(x) - 2):
-        chi[i+1] = (Z[i+2] - Z[i]) / (x[i+2] - x[i])
-    chi[len(x) - 1] = (Z[-1] - Z[-2]) / (x[-1] - x[-2])
-    chi = 2 * chi**2 # 2(grad(Z))^2
-    Dz = Dz0 * (T/273.0)**1.5 * 101325.0/p0 # Diffusion coefficient Dz
-    chi = Dz*chi # chi = 2D(grad(Z))^2
-    norm = matplotlib.colors.Normalize(vmin=300, vmax=2500)
-    sc = plt.scatter(Z,chi,c=T,cmap=plt.cm.rainbow,s=20,norm=norm)
-v = [300,500,1000,1500,2000,2500]
-cbar = plt.colorbar(sc,ticks=v)
-cbar.set_label(r'T (K)', fontsize=fonts2)
-for t in cbar.ax.get_yticklabels():
-    t.set_fontsize(fonts2)
-plt.tick_params(labelsize=fonts1)
-plt.xlabel(r'$Z \ (-)$',fontsize=fonts1)
-plt.ylabel(r'$\chi \ (1/s)$',fontsize=fonts1)
-# plt.savefig('Z-T.png', dpi=500,bbox_inches='tight')
-'''
+    ax.plot(Z,T,label=file)
+ax.set_xlabel(r'$Z$ (-)')
+ax.legend()
+ax.set_ylim(bottom=300)
+# ax.margins(x=0.0)
+# ax.set_xlim(0,1.0)
+# ax.set_ylim(300,2200)
+ax.set_ylabel(r'$T$ (K)')
+fig.tight_layout()
 
 # Plot Z-Yc:T
-plt.figure(figsize=figs)
+fig, ax = plt.subplots(figsize=figs)
 for i,file in enumerate(filename):
     data = np.loadtxt(file, delimiter=',', skiprows = 1)
     data = np.transpose(data)
     x = data[xIndex]
     T = data[TIndex]
-    if xin is 'n':
-        YIN = data[ARIndex]
-        YIN_O = max(YIN[-1], YIN[0])
-    else:
-        YIN = data[N2Index]
-        YIN_O = max(YIN[-1], YIN[0])
+    YIN = data[ARIndex]
+    YIN_O = max(YIN[-1], YIN[0])
     YIN_F = 0
     Z = (YIN - YIN_O)/(YIN_F - YIN_O)
     #Yc = data[COIndex] + data[H2Index] + data[CO2Index] + data[H2OIndex]
     Yc = data[CO2Index] + data[H2OIndex]
-    norm = matplotlib.colors.Normalize(vmin=300, vmax=2500)
-    sc = plt.scatter(Z,Yc,c=T,cmap=plt.cm.rainbow,s=20,norm=norm)
-v = [300,500,1000,1500,2000,2500]
-cbar = plt.colorbar(sc,ticks=v)
-cbar.set_label(r'T (K)', fontsize=fonts2)
-for t in cbar.ax.get_yticklabels():
-    t.set_fontsize(fonts2)
-plt.tick_params(labelsize=fonts1)
-plt.xlabel(r'$Z \ (-)$',fontsize=fonts1)
-plt.ylabel(r'$Y_c \ (-)$',fontsize=fonts1)
+    sc = ax.scatter(Z,Yc,c=T,s=20,vmin=300, vmax=2200)
+v = [300,500,1000,1500,2000,2200]
+cbar = fig.colorbar(sc,ticks=v)
+cbar.set_label(r'$T$ (K)')
+
+# ax.margins(x=0.0)
+ax.set_ylim(bottom=0)
+ax.set_xlabel(r'$Z \ (-)$')
+ax.set_ylabel(r'$Y_c \ (-)$')
+fig.tight_layout()
 # plt.savefig('Z-Yc-T.png', dpi=500,bbox_inches='tight')
-
-'''
-# Plot Flame Index (FI)
-plt.figure(figsize=figs)
-for file in filename:
-    data = np.loadtxt(file,delimiter=',',skiprows = 1)
-    data = np.transpose(data)
-    x = data[xIndex]
-    YOx = data[O2Index]
-    # YFu = data[NC12H26Index] + data[IC16H34Index] + data[DECALINIndex] + data[C7H8Index]
-    YFu = data[C2H5OHIndex]
-    gradF = np.zeros(len(x))
-    gradO = np.zeros(len(x))
-    gradO[0] = (YOx[1] - YOx[0]) / (x[1] - x[0]) # Gradient computation
-    for i in range(len(x) - 2):
-        gradO[i+1] = (YOx[i+2] - YOx[i]) / (x[i+2] - x[i])
-    gradO[len(x) - 1] = (YOx[-1] - YOx[-2]) / (x[-1] - x[-2])
-
-    gradF[0] = (YFu[1] - YFu[0]) / (x[1] - x[0]) # Gradient computation
-    for i in range(len(x) - 2):
-        gradF[i+1] = (YFu[i+2] - YFu[i]) / (x[i+2] - x[i])
-    gradF[len(x) - 1] = (YFu[-1] - YFu[-2]) / (x[-1] - x[-2])
-    FI = np.zeros(len(x))
-    for i in range(len(x)):
-        if np.sqrt(gradF[i]*gradF[i]) < 1e-6 or np.sqrt(gradO[i] * gradO[i]) < 1e-6:
-            FI[i] = 0
-        else:
-            FI[i] = (gradF[i] / np.sqrt(gradF[i]*gradF[i])) * (gradO[i] / np.sqrt(gradO[i] * gradO[i]))
-    plt.scatter(x,FI,label=file,c='k')
-plt.tick_params(labelsize=fonts1)
-plt.xlabel(r'x (m)',fontsize=fonts1)
-plt.ylabel(r'FI (-)',fontsize=fonts1)
-plt.ylim(-1,1)
-# plt.legend(loc=0,fontsize=fonts1)
-# plt.savefig('FI.png', dpi=500,bbox_inches='tight')
-'''
-
-
-# u-x
-plt.figure(figsize=figs)
-for file in filename:
-    data = np.loadtxt(file,delimiter=',',skiprows = 1)
-    data = np.transpose(data)
-    x = data[xIndex]
-    u = data[uIndex]
-    plt.plot(x,u,label=file[0:-5],lw=linew)
-plt.legend(loc=0,fontsize=fonts1)
-plt.tick_params(labelsize=fonts1)
-plt.xlabel(r'x (m)',fontsize=fonts1)
-plt.ylabel(r'u (m/s)',fontsize=fonts1)
 
 plt.show()
