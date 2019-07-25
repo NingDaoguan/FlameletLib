@@ -17,7 +17,7 @@ mpl.rcParams['lines.linewidth'] = 2
 mpl.rcParams['savefig.dpi'] = 300
 mpl.rcParams['savefig.bbox'] = 'tight'
 
-#Files
+# Files
 figname = '1'
 print("Enter file names:")
 filename = []
@@ -28,7 +28,7 @@ while True:
     else:
         filename.append(name_input)
 
-#Plot data
+# Plot data
 file = filename[0]
 with open(file) as f:
     line = f.readline()
@@ -50,17 +50,17 @@ for i,file in enumerate(filename):
     ax2.plot(x,data[1],label=name[1],ls='-',c='k')
 
 
-#Fig
+# Fig
 ax1.legend(loc=0)
 ax2.legend(loc=0)
 x_ticks = np.linspace(x[0], x[-1], 5)
 ax1.set_xticks(x_ticks)
-ax1.set_ylim(-20, 60)
+# ax1.set_ylim(-20, 60)
 ax1.set_xlabel(r'$x$ (m)')
 ax1.set_ylabel(r'$\dot{\omega}$ (kg/m3 s)')
 
 ax2.set_xticks(x_ticks)
-ax2.set_ylim(-0.5e8, 6e8)
+# ax2.set_ylim(-0.5e8, 6e8)
 ax2.set_xlabel(r'$x$ (m)')
 ax2.set_ylabel(r'$\dot{Q}$ (J/m3 s)')
 fig1.tight_layout()

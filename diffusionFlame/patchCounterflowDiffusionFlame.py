@@ -18,13 +18,13 @@ if x==1:
     f = ct.CounterflowDiffusionFlame(gas, width=width)
     # Define the operating pressure and boundary conditions
     f.P = 1.e5  # 1 bar
-    f.fuel_inlet.mdot = 6.1 # kg/m^2/s
+    f.fuel_inlet.mdot = 1.2 # kg/m^2/s
     f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
-    f.fuel_inlet.T = 480.0  # K
-    f.oxidizer_inlet.mdot = 3.6 # kg/m^2/s
+    f.fuel_inlet.T = 800.0  # K
+    f.oxidizer_inlet.mdot = 0.6 # kg/m^2/s
     f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-    f.oxidizer_inlet.T = 300.0  # K
-    temperature_limit_extinction = 480  # K
+    f.oxidizer_inlet.T = 800.0  # K
+    temperature_limit_extinction = 800  # K
 elif x==2:
     reaction_mechanism = 'KEROSENE_CRECK231.cti'
     gas = ct.Solution(reaction_mechanism)
