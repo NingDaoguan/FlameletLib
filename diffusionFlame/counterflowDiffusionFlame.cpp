@@ -181,7 +181,7 @@ void counterflowDiffusionFlame(doublereal mdotL, doublereal mdotR, doublereal le
     values[5]=0.5*a0*(-0.2*width);
     values[6]=0.5*a0*(-1*width);
     flame.setInitialGuess("u",locs,values);
-    for (int ik=0; ik<nsp;ik++)
+    for (size_t ik=0; ik<nsp; ik++)
     {
        values[0]=left.massFraction(ik);
        values[1]=0.8*left.massFraction(ik) + 0.2*yIn[ik];
@@ -211,7 +211,7 @@ void counterflowDiffusionFlame(doublereal mdotL, doublereal mdotR, doublereal le
     Array2D solution(np,nsp+6,0.0);
     vector_fp grid;
     grid.resize(np);
-    for (int iz=0;iz<np;iz++)
+    for (int iz=0; iz<np; iz++)
     {
         grid[iz] = flow.grid(iz);
     }
@@ -222,7 +222,7 @@ void counterflowDiffusionFlame(doublereal mdotL, doublereal mdotR, doublereal le
         {
             solution(n,i) = flame.value(domFlow,i-1,n);
         }
-        for (int i=5; i<nsp+6;i++)
+        for (size_t i=5; i<nsp+6;i++)
         {
             if (flame.value(domFlow, i-1,n) > 0.0) {solution(n,i) = flame.value(domFlow, i-1,n);}
             else if (flame.value(domFlow, i-1,n) < 0.0)
@@ -233,7 +233,7 @@ void counterflowDiffusionFlame(doublereal mdotL, doublereal mdotR, doublereal le
         }
     }
 
-    for (int j=0;j<solution.nColumns();j++)
+    for (size_t j=0;j<solution.nColumns();j++)
     {
         if (j==0) outfile << "z";
         else outfile << flow.componentName(j-1);
@@ -242,9 +242,9 @@ void counterflowDiffusionFlame(doublereal mdotL, doublereal mdotR, doublereal le
     }
     outfile << std::endl;
     
-    for (int i=0;i<solution.nRows();i++)
+    for (size_t i=0;i<solution.nRows();i++)
     {
-        for (int j=0;j<solution.nColumns();j++)
+        for (size_t j=0;j<solution.nColumns();j++)
         {
             outfile << solution(i,j);
             if (j!=solution.nColumns()-1) outfile << ",";
@@ -261,14 +261,32 @@ int main(int argc, char *argv[])
     doublereal mdotR = 0.2;
     doublereal len = 0.02;
 
-    if (argc == 4) {
-        mdotL = atof(argv[1]);
-        mdotR = atof(argv[2]);
-        len = atof(argv[3]);
-    }
-    else {
-        std::cerr << "Usage: counterflowDiffusionFlame mdotL mdotR len" << std::endl;
-        return -1;
+    std::string usgmsg =
+        "Usage: counterflowDiffusionFlame -l <num> -r <num> -w <num>\n"
+        "Options:\n"
+        "  -l <num>:\tmdot left\n"
+        "  -r <num>:\tmdot right\n"
+        "  -w <num>:\twidth of the domain\n";
+
+    int opt;
+    while ((opt = getopt(argc, argv, "hl:r:w:")) != -1) {
+        switch (opt) {
+        case 'h':
+            std::cout << usgmsg << std::endl;
+            return 0;
+        case 'l':
+            mdotL = std::stod(optarg);
+            break;
+        case 'r':
+            mdotR = std::stod(optarg);
+            break;
+        case 'w':
+            len = std::stod(optarg);
+            break;
+        default:
+            std::cerr << usgmsg << std::endl;
+            return 1;
+        }
     }
 
     try {
