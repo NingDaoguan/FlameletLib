@@ -133,7 +133,7 @@ for j,file in enumerate(filename):
     ax2.plot(x,10*data[OHIndex],label=name[OHIndex] + r'$\times$10',lw=linew)
     # ax2.plot(x,data[volFracIndex],label='Volume fraction',ls=':',c='b',lw=linew)
     ax2.plot(x,Z,label=r'$Z$',ls='--',c='b',lw=linew)
-    ax2.plot([0,0.02],[0.068,0.068],label=r'$Z_{st}$', c='k',ls=':',lw=linew)
+    ax2.plot([0,0.02],[0.1,0.1],label=r'$Z_{st}$', c='k',ls=':',lw=linew)
     # ax2.text(0.002,0.2,'Jet-A diffusion flame')
 
     filename2 = 'LAG' + file
@@ -236,5 +236,40 @@ ax.set_xlabel(r'$Z \ (-)$')
 ax.set_ylabel(r'$Y_c \ (-)$')
 fig.tight_layout()
 # plt.savefig('Z-Yc-T.png', dpi=500,bbox_inches='tight')
+
+
+# Plot Flame Index (FI)
+plt.figure(figsize=figs)
+for file in filename:
+    data = np.loadtxt(file,delimiter=',',skiprows = 1)
+    data = np.transpose(data)
+    x = data[xIndex]
+    YOx = data[O2Index]
+    # YFu = data[NC12H26Index] + data[IC16H34Index] + data[DECALINIndex] + data[C7H8Index]
+    YFu = data[C2H5OHIndex]
+    gradF = np.zeros(len(x))
+    gradO = np.zeros(len(x))
+    gradO[0] = (YOx[1] - YOx[0]) / (x[1] - x[0]) # Gradient computation
+    for i in range(len(x) - 2):
+        gradO[i+1] = (YOx[i+2] - YOx[i]) / (x[i+2] - x[i])
+    gradO[len(x) - 1] = (YOx[-1] - YOx[-2]) / (x[-1] - x[-2])
+    gradF[0] = (YFu[1] - YFu[0]) / (x[1] - x[0]) # Gradient computation
+    for i in range(len(x) - 2):
+        gradF[i+1] = (YFu[i+2] - YFu[i]) / (x[i+2] - x[i])
+    gradF[len(x) - 1] = (YFu[-1] - YFu[-2]) / (x[-1] - x[-2])
+    FI = np.zeros(len(x))
+    for i in range(len(x)):
+        if np.sqrt(gradF[i]*gradF[i]) < 1e-6 or np.sqrt(gradO[i] * gradO[i]) < 1e-6:
+            FI[i] = 0
+        else:
+            FI[i] = (gradF[i] / np.sqrt(gradF[i]*gradF[i])) * (gradO[i] / np.sqrt(gradO[i] * gradO[i]))
+    plt.scatter(x,FI,label=file,c='k')
+plt.xlabel(r'x (m)')
+plt.ylabel(r'FI (-)')
+x_ticks = np.linspace(x[0], x[-1], 5)
+plt.xticks(x_ticks,color='k')
+plt.xlim(0,0.02)
+plt.ylim(-1,1)
+fig.tight_layout()
 
 plt.show()
