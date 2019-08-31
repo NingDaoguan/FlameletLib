@@ -29,13 +29,13 @@ for i in range(int(num)):
     fname = 'flameletTable_{:}.csv'.format(i)
     data = np.loadtxt(fname,delimiter=',',skiprows=1)
     Z = data.T[0]
-    ha = data.T[1] / 1000.0
-    Yc = data.T[2]
+    Yc = data.T[1]
+    ha = data.T[2] / 1000.0
     omega = data.T[3]
     T = data.T[4]
-    sc = ax.scatter(Z,ha,Yc,c=T,cmap='rainbow',vmin=300,vmax=2600,s=60)
+    sc = ax.scatter(Z,ha,Yc,c=T,cmap='rainbow',vmin=300,vmax=2000,s=60)
 
-v = [300,500,1000,1500,2000,2500]
+v = [300,500,1000,1500,2000]
 cbar = plt.colorbar(sc,ticks=v)
 cbar.set_label(r'T (K)')
 # for t in cbar.ax.get_yticklabels():
