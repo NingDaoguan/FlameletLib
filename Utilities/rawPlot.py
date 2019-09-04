@@ -34,10 +34,7 @@ while True:
 file = filename[0]
 with open(file) as f:
     line = f.readline()
-    line = line.split(',')
-    name = []
-    for i in range(len(line)):
-        name.append(line[i])
+    name = [x.strip() for x in line.split(',')]
 majorIndex = []
 for i in range(len(name)):
     if name[i] == 'z' or name[i] == 'z (m)' or name[i] == 'x (m)':

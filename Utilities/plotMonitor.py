@@ -16,15 +16,15 @@ mpl.rcParams['lines.linewidth'] = 2
 mpl.rcParams['savefig.dpi'] = 300
 mpl.rcParams['savefig.bbox'] = 'tight'
 
-print("Enter file names:")
-filename = []
-while True:
-    name_input = input('> ')
-    if name_input == '':
-        break
-    else:
-        filename.append(name_input)
-
+# print("Enter file names:")
+# filename = []
+# while True:
+#     name_input = input('> ')
+#     if name_input == '':
+#         break
+#     else:
+#         filename.append(name_input)
+filename = ['monitor.csv']
 fig, ax = plt.subplots(figsize=(12,8))
 for ifile in filename:
     data = np.loadtxt(ifile,delimiter=',',skiprows=1)

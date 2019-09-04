@@ -61,17 +61,15 @@ for filename in os.listdir():
         break  # only read one file
 
 fig = plt.figure()
-ax1 = plt.subplot(221)
-ax2 = plt.subplot(222)
-ax3 = plt.subplot(223)
-ax4 = plt.subplot(224)
+ax1 = plt.subplot(121)
+ax2 = plt.subplot(122)
 n = 0  # count
 for filename in os.listdir():
     if filename.endswith('.csv'):
         filename2 = os.path.join(data_directory, 'flameletTable_{:}.csv'.format(n))
         n += 1
         with open(filename2, 'w+') as fo:
-            line = 'Z,Yc,h,omegaYc,T'
+            line = 'Z,Yc,omegaYc,T'
             for i in speciesNames:
                 line += f',{i}'
             fo.write(line+'\n')
@@ -94,24 +92,13 @@ for filename in os.listdir():
         # Calculate omegaYc
         omegaYc = dataReaction[CO2Index - speciesStart + 2] \
                  +dataReaction[H2OIndex - speciesStart + 2]
-        Y = []
-        h = np.zeros(len(Yc))
-        for i in range(len(Yc)):
-            Y = data1orig[i][speciesStart::]
-            gas.TPY = (T[i], p, Y)
-            h[i] = gas.enthalpy_mass
-            # omegaYc[i] = gas.net_production_rates[CO2Index - speciesStart] * molW[CO2Index - speciesStart] \
-            #           +gas.net_production_rates[H2OIndex - speciesStart] * molW[H2OIndex - speciesStart]
 
         data2 = []
         data2.append(list(Z))
         data2.append(list(Yc))
-        data2.append(list(h))
         data2.append(list(omegaYc))
         ax1.plot(Z,T)
-        ax2.plot(Z,h)
-        ax3.plot(Z,Yc)
-        ax4.plot(Z,omegaYc)
+        ax2.plot(Z,Yc)
         data2.append(list(T))
         for i in range(len(data1)):
             if i >= speciesStart:
