@@ -3,3 +3,4 @@
 *.out
 counterflowDiffusionFlame
 *trash*
+flameletLibGen_gas.py
