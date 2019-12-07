@@ -3,7 +3,23 @@
 import os
 import cantera as ct
 import numpy as np
+import matplotlib as mpl
 import matplotlib.pyplot as plt
+
+# Configurations
+mpl.rcParams['font.family'] = 'serif'
+mpl.rcParams['font.size'] = 18
+mpl.rcParams['font.weight'] = 'medium'
+mpl.rcParams['font.style'] = 'normal'
+# mpl.rcParams['font.serif'] = 'DejaVu Serif'
+# mpl.rcParams['font.serif'] = 'Georgia'
+# mpl.rcParams['font.serif'] = 'Times New Roman'
+# mpl.rcParams['text.usetex'] = True
+mpl.rcParams['mathtext.fontset'] = 'stix'
+mpl.rcParams['mathtext.fallback_to_cm'] = True
+mpl.rcParams['savefig.dpi'] = 300
+mpl.rcParams['savefig.bbox'] = 'tight'
+
 
 p = 101325.0  # constant pressure
 ctifile = input(
@@ -60,7 +76,7 @@ for filename in os.listdir():
                 continue
         break  # only read one file
 
-fig = plt.figure()
+fig = plt.figure(figsize=(12,8))
 ax1 = plt.subplot(221)
 ax2 = plt.subplot(222)
 ax3 = plt.subplot(223)
@@ -108,10 +124,10 @@ for filename in os.listdir():
         data2.append(list(Yc))
         data2.append(list(h))
         data2.append(list(omegaYc))
-        ax1.plot(Z,T)
-        ax2.plot(Z,h)
-        ax3.plot(Z,Yc)
-        ax4.plot(Z,omegaYc)
+        ax1.scatter(Z, T, color='C0', s=4)
+        ax2.scatter(Z, h/1000, color='C1', s=4)
+        ax3.scatter(Z, Yc, color='C2', s=4)
+        ax4.scatter(Z, omegaYc, color='C3', s=4)
         data2.append(list(T))
         for i in range(len(data1)):
             if i >= speciesStart:
@@ -122,5 +138,13 @@ for filename in os.listdir():
         data2 = np.transpose(data2)
         with open(filename2, 'a') as f:
             np.savetxt(f, data2, delimiter=',',fmt='%f')
+ax1.set_xlabel('Z (-)')
+ax2.set_xlabel('Z (-)')
+ax3.set_xlabel('Z (-)')
+ax4.set_xlabel('Z (-)')
+ax1.set_ylabel('T (K)')
+ax2.set_ylabel('h (kJ/kg)')
+ax3.set_ylabel('C (-)')
+ax4.set_ylabel('source (kg/m3 s)')
 plt.savefig('lib.png',dpi=500)
 plt.show()

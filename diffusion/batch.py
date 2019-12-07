@@ -7,134 +7,22 @@ data_directory = './diffusion_flame_batch_data/'
 if not os.path.exists(data_directory):
     os.makedirs(data_directory)
 
-print(  '1:\tJet-A-300K\n2:\tJet-A-300KLe1\n3:\tJet-A-800K\n'
-        '4:\tJet-A-800KLe1\n5:\tnc12h26-300K\n6:\tnc12h26-300KLe1\n'
-        '7:\tC2H5OH-300K\n8:\tCH4-300K\n')
-x = input()
-x = int(x)
 # PART 1: INITIALIZATION
-if x==1:
-    reaction_mechanism = 'KEROSENE_CRECK231.cti'
-    gas = ct.Solution(reaction_mechanism)
-    width = 0.1 # 200mm wide
-    f = ct.CounterflowDiffusionFlame(gas, width=width)
-    # Define the operating pressure and boundary conditions
-    f.P = 1.e5  # 1 bar
-    f.fuel_inlet.mdot = 0.9 # kg/m^2/s
-    f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
-    f.fuel_inlet.T = 300.0  # K
-    f.oxidizer_inlet.mdot = 0.55 # kg/m^2/s
-    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-    f.oxidizer_inlet.T = 300.0  # K
-    temperature_limit_extinction = np.maximum(f.fuel_inlet.T, f.oxidizer_inlet.T)  # K
-elif x==2:
-    reaction_mechanism = 'KEROSENE_CRECK231.cti'
-    gas = ct.Solution(reaction_mechanism)
-    gas.transport_model = 'UnityLewis'
-    width = 0.2 # 200mm wide
-    f = ct.CounterflowDiffusionFlame(gas, width=width)
-    # Define the operating pressure and boundary conditions
-    f.P = 101325.0  # 1 bar
-    f.fuel_inlet.mdot = 0.55 # kg/m^2/s
-    f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
-    f.fuel_inlet.T = 300.0  # K
-    f.oxidizer_inlet.mdot = 0.35 # kg/m^2/s
-    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-    f.oxidizer_inlet.T = 300.0  # K
-    temperature_limit_extinction = np.maximum(f.fuel_inlet.T, f.oxidizer_inlet.T)  # K
-elif x==3:
-    reaction_mechanism = 'KEROSENE_CRECK231.cti'
-    gas = ct.Solution(reaction_mechanism)
-    width = 0.4 # 200mm wide
-    f = ct.CounterflowDiffusionFlame(gas, width=width)
-    # Define the operating pressure and boundary conditions
-    f.P = 1.e5  # 1 bar
-    f.fuel_inlet.mdot = 0.9 # kg/m^2/s
-    f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
-    f.fuel_inlet.T = 480.0  # K
-    f.oxidizer_inlet.mdot = 0.4 # kg/m^2/s
-    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-    f.oxidizer_inlet.T = 800.0  # K
-    temperature_limit_extinction = 800  # K
-elif x==4:
-    reaction_mechanism = 'KEROSENE_CRECK231.cti'
-    gas = ct.Solution(reaction_mechanism)
-    gas.transport_model = 'UnityLewis'
-    width = 0.4 # 200mm wide
-    f = ct.CounterflowDiffusionFlame(gas, width=width)
-    # Define the operating pressure and boundary conditions
-    f.P = 1.e5  # 1 bar
-    f.fuel_inlet.mdot = 0.9 # kg/m^2/s
-    f.fuel_inlet.X = 'NC12H26:0.3, IC16H34:0.36, DECALIN:0.246, C7H8:0.094'
-    f.fuel_inlet.T = 480.0  # K
-    f.oxidizer_inlet.mdot = 0.4 # kg/m^2/s
-    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-    f.oxidizer_inlet.T = 800.0  # K
-    temperature_limit_extinction = 800  # K
-elif x==5:
-    reaction_mechanism = 'nDodecane_CRECK.cti'
-    gas = ct.Solution(reaction_mechanism)
-    width = 0.4 # 200mm wide
-    f = ct.CounterflowDiffusionFlame(gas, width=width)
-    # Define the operating pressure and boundary conditions
-    f.P = 1.e5  # 1 bar
-    f.fuel_inlet.mdot = 0.6 # kg/m^2/s
-    f.fuel_inlet.X = 'NC12H26:1.0'
-    f.fuel_inlet.T = 480.0  # K
-    f.oxidizer_inlet.mdot = 0.35 # kg/m^2/s
-    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-    f.oxidizer_inlet.T = 300.0  # K
-    temperature_limit_extinction = 480  # K
-elif x==6:
-    reaction_mechanism = 'nDodecane_CRECK.cti'
-    gas = ct.Solution(reaction_mechanism)
-    gas.transport_model = 'UnityLewis'
-    width = 0.4 # 200mm wide
-    f = ct.CounterflowDiffusionFlame(gas, width=width)
-    # Define the operating pressure and boundary conditions
-    f.P = 1.e5  # 1 bar
-    f.fuel_inlet.mdot = 0.6 # kg/m^2/s
-    f.fuel_inlet.X = 'NC12H26:1.0'
-    f.fuel_inlet.T = 480.0  # K
-    f.oxidizer_inlet.mdot = 0.35 # kg/m^2/s
-    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-    f.oxidizer_inlet.T = 300.0  # K
-    temperature_limit_extinction = 480  # K
-elif x==7:
-    reaction_mechanism = 'Ethanol_31.cti'
-    gas = ct.Solution(reaction_mechanism)
-    gas.transport_model = 'UnityLewis'
-    width = 0.3 # 300mm wide
-    f = ct.CounterflowDiffusionFlame(gas, width=width)
-    # Define the operating pressure and boundary conditions
-    f.P = 1.0e5  # 1 bar
-    f.fuel_inlet.mdot = 0.45 # kg/m^2/s
-    # f.fuel_inlet.X = 'N2:0.27078, AR:0.00347049, H2:0.251899, \
-    #                   H2O:0.0371238, CO:0.18032, CO2:0.0733696, CH4:0.183025'
-    # f.fuel_inlet.X = 'C2H5OH:2.66167, N2:3.714, AR:0.0476, CO2:0.66667, H2O:1.0'
-    # f.fuel_inlet.X = 'C2H5OH:2.995, O2:1, N2:3.714, AR:0.0476'
-    f.fuel_inlet.X = 'C2H5OH:1'
-    f.fuel_inlet.T = 285.0  # K
-    f.oxidizer_inlet.mdot = 0.36 # kg/m^2/s
-    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-    f.oxidizer_inlet.T = 285.0  # K
-    temperature_limit_extinction = np.maximum(f.fuel_inlet.T, f.oxidizer_inlet.T)  # K
-elif x==8:
-    reaction_mechanism = 'gri30.cti'
-    gas = ct.Solution(reaction_mechanism)
-    width = 0.2 # 200mm wide
-    f = ct.CounterflowDiffusionFlame(gas, width=width)
-    # Define the operating pressure and boundary conditions
-    f.P = 1.e5  # 1 bar
-    f.fuel_inlet.mdot = 0.36 # kg/m^2/s
-    f.fuel_inlet.X = 'CH4:1.0'
-    f.fuel_inlet.T = 300.0  # K
-    f.oxidizer_inlet.mdot = 0.5 # kg/m^2/s
-    f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
-    f.oxidizer_inlet.T = 300.0  # K
-    temperature_limit_extinction = 295  # K
-else:
-    print("INPUT ERR")
+# reaction_mechanism = 'Ethanol_31.cti'
+reaction_mechanism = 'Heptane0.cti'
+gas = ct.Solution(reaction_mechanism)
+gas.transport_model = 'UnityLewis'
+width = 0.02
+f = ct.CounterflowDiffusionFlame(gas, width=width)
+# Define the operating pressure and boundary conditions
+f.P = 5.0e6  # 1 bar
+f.fuel_inlet.mdot = 24 # kg/m^2/s
+f.fuel_inlet.X = 'C7H16:1'
+f.fuel_inlet.T = 300.0  # K
+f.oxidizer_inlet.mdot = 12 # kg/m^2/s
+f.oxidizer_inlet.X = 'O2:0.21, N2:0.78, AR:0.01'
+f.oxidizer_inlet.T = 800.0  # K
+temperature_limit_extinction = np.maximum(f.fuel_inlet.T, f.oxidizer_inlet.T)  # K
 
 # Set refinement parameters, if used
 f.set_refine_criteria(ratio=4.0, slope=0.2, curve=0.2, prune=0.04)
@@ -210,3 +98,4 @@ while np.max(f.T) > temperature_limit_extinction:
         else:
             print('Error occurred while solving:', e)
         break
+

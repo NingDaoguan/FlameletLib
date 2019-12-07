@@ -33,9 +33,9 @@ for i in range(int(num)):
     ha = data.T[2] / 1000.0
     omega = data.T[3]
     T = data.T[4]
-    sc = ax.scatter(Z,ha,Yc,c=T,cmap='rainbow',vmin=300,vmax=2000,s=60)
+    sc = ax.scatter(Z,ha,Yc,c=T,cmap='jet',vmin=300,vmax=2200,s=60)
 
-v = [300,500,1000,1500,2000]
+v = [300,500,1000,1500,2000,2200]
 cbar = plt.colorbar(sc,ticks=v)
 cbar.set_label(r'T (K)')
 # for t in cbar.ax.get_yticklabels():

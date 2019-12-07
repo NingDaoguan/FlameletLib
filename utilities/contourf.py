@@ -16,29 +16,30 @@ mpl.rcParams['savefig.bbox'] = 'tight'
 figs = (13,9)
 
 # Input file names
-print("Enter file names:")
-filename = []
-while True:
-    name_input = input('> ')
-    if name_input == '':
-        break
-    else:
-        filename.append(name_input)
+N = 201
+print("Enter file name:")
+filename = input('> ')
+data = np.loadtxt(filename, delimiter=',').T
+z = data[0]
+c = data[1]
+t = data[3]
 
+points1 = np.linspace(np.min(z), np.max(z), N)
+points2 = np.linspace(np.min(c), np.max(c), N)
+xx, yy = np.meshgrid(points1, points2)
+zz = xx + yy
+
+for i in range(N):
+    for j in range(N):
+        zz[j][i] = t[N*i + j]
 
 plt.figure(figsize=figs)
-for ic,filename1 in enumerate(filename):
-    data1 = np.loadtxt(filename1,delimiter=',',skiprows=1)
-    data1 = np.transpose(data1)
-    Z1 = data1[0]
-    Yc = data1[1]
-
-    sc = plt.scatter(Z1,Yc,c=data1[3],cmap='rainbow',vmin=300, vmax=2200)
-v = [300,500,1000,1500,2000,2300]
-cbar = plt.colorbar(sc,ticks=v)
+ct = plt.contourf(xx, yy, zz, vmin = 300, vmax = 2200, cmap = 'rainbow')
+# v = [300,400,500,1000,1500,2000,2300]
+cbar = plt.colorbar(ct)
 cbar.set_label(r'$T$ $\mathrm{(K)}$')
-# plt.xlim(0,0.2)
-# plt.ylim(0,0.3)
+plt.xlim(0,0.2)
+plt.ylim(0,0.3)
 plt.xlabel(r'$Z$ (-)')
 plt.ylabel(r'$Y_c$ (-)')
 plt.tight_layout()

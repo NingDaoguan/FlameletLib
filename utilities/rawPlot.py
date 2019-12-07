@@ -179,7 +179,7 @@ for j,file in enumerate(filename):
     x_ticks = np.linspace(x[0], x[-1], 5)
     plt.xticks(x_ticks,color='k')
     fig.tight_layout()
-    # plt.savefig(file+'-x-T.png',dpi=500,bbox_inches='tight')
+    plt.savefig(file+'-x-T.png',dpi=500,bbox_inches='tight')
 
 
 # ------Plot 2------
